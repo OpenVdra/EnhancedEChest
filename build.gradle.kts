@@ -63,13 +63,7 @@ tasks.shadowJar {
     relocate("org.mariadb.jdbc", "com.enhancedechest.libs.mariadb")
 
     mergeServiceFiles()
-
-    // Auto-deploy to local test server when the directory exists (dev convenience).
-    // Falls back to the default build/libs/ output on CI where the path is absent.
-    val testPlugins = file("C:\\Users\\Admin\\Desktop\\TestServer\\plugins")
-    if (testPlugins.exists()) {
-        destinationDirectory.set(testPlugins)
-    }
+    // destinationDirectory.set(file("C:\\Users\\Admin\\Desktop\\TestServer\\plugins"))
 }
 
 tasks.build {
