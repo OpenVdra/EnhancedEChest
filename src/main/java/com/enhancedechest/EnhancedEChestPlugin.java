@@ -3,6 +3,7 @@ package com.enhancedechest;
 import com.enhancedechest.config.ConfigMigrations;
 import com.enhancedechest.config.PluginConfig;
 import com.enhancedechest.config.YamlMigrator;
+import com.enhancedechest.expiry.ExpirySweeper;
 import com.enhancedechest.gui.EnderChestService;
 import com.enhancedechest.lang.LanguageManager;
 import com.enhancedechest.listener.EnderChestGuiListener;
@@ -30,6 +31,7 @@ public final class EnhancedEChestPlugin extends JavaPlugin {
     private ContainerCodec codec;
     private EnderChestStorage storage;
     private EnderChestService enderChestService;
+    private ExpirySweeper expirySweeper;
     private MigrationService migrationService;
     private UpdateChecker updateChecker;
     private FoliaLib foliaLib;
@@ -55,12 +57,17 @@ public final class EnhancedEChestPlugin extends JavaPlugin {
 
         languageManager   = new LanguageManager(this, pluginConfig.getLocale());
         enderChestService = new EnderChestService(languageManager, codec, storage,
-                getSLF4JLogger(), foliaLib, pluginConfig.getDefaultSize());
+                getSLF4JLogger(), foliaLib, pluginConfig.getDefaultSize(),
+                pluginConfig.getTempExpiryMillis());
         migrationService  = new MigrationService(storage, codec, getSLF4JLogger());
+
+        expirySweeper = new ExpirySweeper(enderChestService, storage, foliaLib,
+                getSLF4JLogger(), pluginConfig.getExpiryCheckIntervalMillis());
+        expirySweeper.start();
 
         var pm = getServer().getPluginManager();
         pm.registerEvents(new VanillaEnderChestListener(enderChestService), this);
-        pm.registerEvents(new EnderChestGuiListener(enderChestService, foliaLib), this);
+        pm.registerEvents(new EnderChestGuiListener(enderChestService, foliaLib, languageManager), this);
         pm.registerEvents(new PlayerQuitListener(enderChestService, foliaLib), this);
         pm.registerEvents(new JoinMigrationListener(pluginConfig, migrationService), this);
 
@@ -73,6 +80,9 @@ public final class EnhancedEChestPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (expirySweeper != null) {
+            expirySweeper.stop();
+        }
         if (enderChestService != null) {
             enderChestService.shutdown();
         }

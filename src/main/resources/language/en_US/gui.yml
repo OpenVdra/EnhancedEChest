@@ -1,21 +1,70 @@
-enderchest:
-  # Title of the first chest (index 1) when it has no custom name — no number shown.
-  title: 'Ender Chest'
-  # Title of chests 2+ when they have no custom name. {index} is the chest number.
-  title-numbered: 'Ender Chest {index}'
+# ============================================================================
+#  GUI / dialog text for EnhancedEChest
+#  Format is auto-detected per line: a line containing '<' is parsed as
+#  MiniMessage, otherwise as legacy '&' colour codes. The dialog strings below
+#  use MiniMessage. Convention: the leading icon is coloured, the text is white.
+# ============================================================================
 
-# /ec list dialog labels. Buttons and titles are intentionally uncoloured; only the
-# main tag is coloured. The "Set as main" button carries a hover lore explaining what main means.
+enderchest:
+  # Inventory window title of chest #1 when it has no custom name (no number shown).
+  title: 'Ender Chest'
+  # Inventory window title of chests 2+ when they have no custom name. {index} = chest number.
+  title-numbered: 'Ender Chest {index}'
+  # Inventory window / dialog title of a temporary (overflow) chest.
+  # Temp chests never use the numbered title above — they always show this name.
+  # Red warning icon, white text.
+  title-temp: '<red>⚠ <white>Temporary Storage'
+
+# ----------------------------------------------------------------------------
+#  /ec list management dialogs
+# ----------------------------------------------------------------------------
 dialog:
-  list-title: 'Your Ender Chests'
-  slots: '{size} slots'
-  open: 'Open'
-  rename: 'Rename'
-  set-main: 'Set as main'
-  # Hover lore (tooltip) shown on the "Set as main" button.
-  main-desc: '<gray>Makes this the chest opened by <white>/ec</white> and by right-clicking an ender chest block.'
-  back: 'Back'
-  save-name: 'Save'
-  cancel: 'Cancel'
-  name-label: 'Chest name'
-  main-tag: '<green>(main)'
+
+  # ===== List dialog (one button per owned chest) =====
+  # Title shown in the dialog header.
+  list-title: '<white>Your Ender Chests'
+  # Centred description shown under the title.
+  list-body: '<white>Select a chest to open or manage.'
+
+  # ===== Detail dialog (a single chest) =====
+  # Centred text shown next to the chest icon. {size} = slot count.
+  detail-body: '<white>{size} slots'
+
+  # ===== Rename dialog =====
+  # Centred instruction shown above the name input box.
+  rename-body: '<white>Enter a new display name for this chest.'
+  # Label of the text input box.
+  name-label: '<white>Display name'
+
+  # ===== Buttons =====
+  # Each button has a label and, where useful, its own hover tooltip (the '-desc' key
+  # right below it). Edit the label and its tooltip together. Icon coloured, text white.
+
+  # Open button — opens the chest inventory.
+  open: '<green>▶ <white>Open'
+  open-desc: '<white>Open this chest.'
+
+  # Rename button — opens the rename dialog (normal chests only).
+  rename: '<yellow>✎ <white>Rename'
+  rename-desc: '<white>Give this chest a custom display name.'
+
+  # Set-as-main button — makes this the chest /ec opens (normal chests only).
+  set-main: '<gold>★ <white>Set as main'
+  set-main-desc: '<white>Make this the chest opened by /ec and by right-clicking an ender chest block.'
+
+  # Back button — returns to the chest list.
+  back: '<gray>← <white>Back'
+
+  # Save button — saves the typed name (rename dialog).
+  save-name: '<green>✔ <white>Save'
+
+  # Cancel button — discards the typed name (rename dialog).
+  cancel: '<red>✖ <white>Cancel'
+
+  # ===== Tags & tooltips =====
+  # Slot-count tooltip shown when hovering a chest in the list. {size} = slot count.
+  slots: '<white>{size} slots'
+  # Appended to the label of the chest that /ec opens.
+  main-tag: '<white>(main)'
+  # Static "time remaining" snapshot shown on chests that expire. {time} e.g. "23h 45m".
+  expires-in: '<white>Expires in {time}'

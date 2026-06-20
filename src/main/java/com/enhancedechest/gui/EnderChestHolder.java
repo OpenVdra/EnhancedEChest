@@ -1,5 +1,6 @@
 package com.enhancedechest.gui;
 
+import com.enhancedechest.model.ChestKind;
 import lombok.Getter;
 import org.bukkit.Location;
 import org.bukkit.inventory.Inventory;
@@ -24,6 +25,9 @@ public final class EnderChestHolder implements InventoryHolder {
     /** Slot count of this chest (multiple of 9, 9..54) — the inventory was created at this size. */
     private final int size;
 
+    /** Whether this chest is a normal or a temporary (overflow) chest; drives temp auto-delete on empty. */
+    private final ChestKind kind;
+
     /**
      * Location of the ender chest block if the GUI was opened by right-clicking a block.
      * Null when opened via /ec command or the management dialog (no physical block involved).
@@ -32,10 +36,11 @@ public final class EnderChestHolder implements InventoryHolder {
     @Nullable
     private final Location sourceBlock;
 
-    public EnderChestHolder(UUID owner, int index, int size, @Nullable Location sourceBlock) {
+    public EnderChestHolder(UUID owner, int index, int size, ChestKind kind, @Nullable Location sourceBlock) {
         this.owner = owner;
         this.index = index;
         this.size = size;
+        this.kind = kind;
         this.sourceBlock = sourceBlock;
     }
 

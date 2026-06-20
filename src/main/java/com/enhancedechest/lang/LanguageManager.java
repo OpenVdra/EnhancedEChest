@@ -2,6 +2,7 @@ package com.enhancedechest.lang;
 
 import com.enhancedechest.config.ConfigMigrations;
 import com.enhancedechest.config.YamlMigrator;
+import com.enhancedechest.model.ChestKind;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
@@ -31,6 +32,7 @@ public final class LanguageManager {
     private String cachedPrefix;
     private String cachedTitleBase;
     private String cachedTitleTemplate;
+    private String cachedTitleTemp;
 
     public LanguageManager(JavaPlugin plugin, String locale) {
         this.plugin = plugin;
@@ -62,6 +64,7 @@ public final class LanguageManager {
         cachedPrefix        = messages.getString("prefix", "[EnhancedEChest] ");
         cachedTitleBase     = gui.getString("enderchest.title", "Ender Chest");
         cachedTitleTemplate = gui.getString("enderchest.title-numbered", "Ender Chest {index}");
+        cachedTitleTemp     = gui.getString("enderchest.title-temp", "Temporary Storage");
     }
 
     private void saveDefault(String path) {
@@ -121,6 +124,18 @@ public final class LanguageManager {
             return parse(cachedTitleBase);
         }
         return parse(cachedTitleTemplate.replace("{index}", Integer.toString(index)));
+    }
+
+    /**
+     * Resolves a chest's display label. Temporary chests get their own dedicated title
+     * ({@code enderchest.title-temp}) rather than the numbered "Ender Chest N". Used for inventory
+     * window titles and dialog buttons where a chest's kind should be visible.
+     */
+    public Component getChestLabel(int index, @org.jetbrains.annotations.Nullable String customName, ChestKind kind) {
+        if (kind == ChestKind.TEMP) {
+            return parse(cachedTitleTemp.replace("{index}", Integer.toString(index)));
+        }
+        return getChestTitle(index, customName);
     }
 
     /**

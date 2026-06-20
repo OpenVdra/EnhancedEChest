@@ -31,6 +31,7 @@ public final class ConfigMigrations {
 
     /** Renames applied to {@code language/<locale>/gui.yml}. */
     public static final List<YamlMigrator.Rename> GUI = List.of(
-            // -- 1.x.x renames go here --
+            // The "set as main" button's hover tooltip was renamed for clarity (now grouped with its button).
+            new YamlMigrator.Rename("dialog.main-desc", "dialog.set-main-desc")
     );
 }

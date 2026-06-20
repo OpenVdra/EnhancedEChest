@@ -1,5 +1,6 @@
 package com.enhancedechest.config;
 
+import com.enhancedechest.util.DurationFormat;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -12,6 +13,10 @@ public final class PluginConfig {
 
     // Ender chest
     private int defaultSize;
+
+    // Temporary chests (overflow on shrink/delete/expire)
+    private long tempExpiryMillis;
+    private long expiryCheckIntervalMillis;
 
     // Database — common
     private String databaseType;
@@ -40,6 +45,9 @@ public final class PluginConfig {
 
         defaultSize = sanitizeSize(config.getInt("enderchest.default-size", 54));
 
+        tempExpiryMillis          = parseDuration(config.getString("temp-enderchest.expiry", "24h"), "24h");
+        expiryCheckIntervalMillis = parseDuration(config.getString("temp-enderchest.check-interval", "5m"), "5m");
+
         databaseType = config.getString("database.type", "sqlite");
         sqliteFile   = config.getString("database.sqlite-file", "enderchests.db");
 
@@ -51,6 +59,15 @@ public final class PluginConfig {
         dbPoolSize = config.getInt("database.pool-size", 10);
 
         migrationEnabled = config.getBoolean("migration.enabled", false);
+    }
+
+    /** Parses a duration string, falling back to {@code fallback} (and ultimately a safe value) on error. */
+    private static long parseDuration(String value, String fallback) {
+        try {
+            return DurationFormat.parse(value);
+        } catch (IllegalArgumentException e) {
+            return DurationFormat.parse(fallback);
+        }
     }
 
     /** True if size is a positive multiple of 9 and at most 54. */

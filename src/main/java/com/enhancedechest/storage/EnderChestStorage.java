@@ -42,12 +42,49 @@ public interface EnderChestStorage {
     void saveChest(UUID owner, int index, byte[] containerData);
 
     /**
-     * Creates a new chest with the next free index (max+1, or 1 if the player has none).
+     * Creates a new permanent chest with the next free index (max+1, or 1 if the player has none).
      * The very first chest a player gets is automatically flagged primary.
      *
      * @return the index assigned to the new chest
      */
-    int createChest(UUID owner, int size);
+    default int createChest(UUID owner, int size) {
+        return createChest(owner, size, null);
+    }
+
+    /**
+     * Creates a new NORMAL chest with the next free index. If {@code expiresAt} is non-null the
+     * chest expires at that epoch-millis instant (an expirable granted chest); null = never expires.
+     * The very first chest a player gets is automatically flagged primary.
+     *
+     * @return the index assigned to the new chest
+     */
+    int createChest(UUID owner, int size, @Nullable Long expiresAt);
+
+    /**
+     * Shrinks a chest and spills any cut-off items into a new temp chest, in one transaction.
+     * The original row is updated to {@code newSize} with {@code visible} as its new contents; if
+     * {@code overflow} is non-null a temp chest (kind=TEMP, next free index, expiring at
+     * {@code tempExpiresAt}) is inserted holding it. Never leaves items in two rows at once.
+     *
+     * @param tempSize slot count of the temp chest created for the overflow (ignored if no overflow)
+     */
+    void spillShrink(UUID owner, int index, int newSize, byte[] visible,
+                     @Nullable byte[] overflow, int tempSize, long tempExpiresAt);
+
+    /**
+     * Deletes a chest, optionally spilling its items into a new temp chest, in one transaction.
+     * If {@code items} is non-null a temp chest holding them is inserted before the original row is
+     * deleted; the primary flag is promoted among the player's remaining NORMAL chests if needed.
+     *
+     * @param tempSize slot count of the temp chest created for the items (ignored if {@code items} is null)
+     */
+    void spillRemove(UUID owner, int index, @Nullable byte[] items, int tempSize, long tempExpiresAt);
+
+    /** Returns every chest whose expiry is set and at or before {@code now}. */
+    List<ExpiredRef> findExpired(long now);
+
+    /** Lightweight reference to an expired chest, returned by {@link #findExpired(long)}. */
+    record ExpiredRef(UUID owner, int index, com.enhancedechest.model.ChestKind kind) {}
 
     /**
      * Creates a chest at a specific index if it does not already exist (used by migration).

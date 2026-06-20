@@ -16,6 +16,8 @@ public final class SqliteStorage extends AbstractSqlStorage {
                 container_data BLOB,
                 migrated       INTEGER NOT NULL DEFAULT 0,
                 last_updated   INTEGER NOT NULL DEFAULT 0,
+                kind           INTEGER NOT NULL DEFAULT 0,
+                expires_at     INTEGER,
                 PRIMARY KEY (player_uuid, chest_index)
             )
             """;

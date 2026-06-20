@@ -2,18 +2,23 @@ package com.enhancedechest.gui.dialog;
 
 import com.enhancedechest.gui.EnderChestService;
 import com.enhancedechest.lang.LanguageManager;
+import com.enhancedechest.model.ChestKind;
 import com.enhancedechest.model.ChestSummary;
+import com.enhancedechest.util.DurationFormat;
 import io.papermc.paper.dialog.Dialog;
 import io.papermc.paper.registry.data.dialog.ActionButton;
 import io.papermc.paper.registry.data.dialog.DialogBase;
 import io.papermc.paper.registry.data.dialog.action.DialogAction;
+import io.papermc.paper.registry.data.dialog.body.DialogBody;
 import io.papermc.paper.registry.data.dialog.input.DialogInput;
 import io.papermc.paper.registry.data.dialog.type.DialogType;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickCallback;
 import net.kyori.adventure.text.event.ClickEvent;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -40,6 +45,7 @@ public final class ChestDialogs {
 
     private static final int MAX_NAME_LENGTH = 32;
     private static final int BUTTON_WIDTH = 180;
+    private static final int BODY_WIDTH = 200;
 
     private final EnderChestService service;
     private final LanguageManager lang;
@@ -60,18 +66,19 @@ public final class ChestDialogs {
     public Dialog listDialog(List<ChestSummary> chests, boolean canSetMain, @Nullable Location sourceBlock) {
         List<ActionButton> buttons = new ArrayList<>(chests.size());
         for (ChestSummary chest : chests) {
-            Component label = lang.getChestTitle(chest.index(), chest.customName());
+            Component label = lang.getChestLabel(chest.index(), chest.customName(), chest.kind());
             if (chest.primary()) {
                 label = label.append(Component.text(" ")).append(lang.getGui("dialog.main-tag"));
             }
-            Component tooltip = lang.getGui("dialog.slots", "size", Integer.toString(chest.size()));
             // Forward, in-place: open this chest's detail dialog client-side (no cursor reset).
-            buttons.add(ActionButton.create(label, tooltip, BUTTON_WIDTH,
+            buttons.add(ActionButton.create(label, listTooltip(chest), BUTTON_WIDTH,
                     DialogAction.staticAction(ClickEvent.showDialog(detailDialog(chest, canSetMain, sourceBlock)))));
         }
 
         return Dialog.create(builder -> builder.empty()
-                .base(DialogBase.builder(lang.getGui("dialog.list-title")).build())
+                .base(DialogBase.builder(lang.getGui("dialog.list-title"))
+                        .body(List.of(DialogBody.plainMessage(lang.getGui("dialog.list-body"), BODY_WIDTH)))
+                        .build())
                 .type(DialogType.multiAction(buttons, null, 1)));
     }
 
@@ -85,26 +92,30 @@ public final class ChestDialogs {
      */
     public Dialog detailDialog(ChestSummary chest, boolean canSetMain, @Nullable Location sourceBlock) {
         int index = chest.index();
+        boolean temp = chest.kind() == ChestKind.TEMP;
         List<ActionButton> buttons = new ArrayList<>(4);
 
         // Open the actual inventory (closes the dialog; cursor position is moot once an inventory opens).
-        buttons.add(ActionButton.create(lang.getGui("dialog.open"), null, BUTTON_WIDTH,
+        buttons.add(ActionButton.create(lang.getGui("dialog.open"), lang.getGui("dialog.open-desc"), BUTTON_WIDTH,
                 click((view, audience) -> {
                     if (audience instanceof Player p) service.openChest(p, index, sourceBlock);
                 })));
 
-        // Forward, in-place: go to the dedicated rename dialog client-side (no cursor reset).
-        buttons.add(ActionButton.create(lang.getGui("dialog.rename"), null, BUTTON_WIDTH,
-                DialogAction.staticAction(ClickEvent.showDialog(renameDialog(chest)))));
+        // Temp chests are transient overflow holders: no renaming, no setting as main. Only Open + Back.
+        if (!temp) {
+            // Forward, in-place: go to the dedicated rename dialog client-side (no cursor reset).
+            buttons.add(ActionButton.create(lang.getGui("dialog.rename"), lang.getGui("dialog.rename-desc"), BUTTON_WIDTH,
+                    DialogAction.staticAction(ClickEvent.showDialog(renameDialog(chest)))));
 
-        // Set as main — mutates data, so it re-queries and is re-pushed from the server.
-        if (canSetMain && !chest.primary()) {
-            buttons.add(ActionButton.create(lang.getGui("dialog.set-main"), lang.getGui("dialog.main-desc"),
-                    BUTTON_WIDTH, click((view, audience) -> {
-                        if (!(audience instanceof Player p)) return;
-                        service.setPrimaryAsync(p.getUniqueId(), index)
-                                .thenRun(() -> service.openDetailDialog(p, index));
-                    })));
+            // Set as main — mutates data, so it re-queries and is re-pushed from the server.
+            if (canSetMain && !chest.primary()) {
+                buttons.add(ActionButton.create(lang.getGui("dialog.set-main"), lang.getGui("dialog.set-main-desc"),
+                        BUTTON_WIDTH, click((view, audience) -> {
+                            if (!(audience instanceof Player p)) return;
+                            service.setPrimaryAsync(p.getUniqueId(), index)
+                                    .thenRun(() -> service.openDetailDialog(p, index));
+                        })));
+            }
         }
 
         buttons.add(ActionButton.create(lang.getGui("dialog.back"), null, BUTTON_WIDTH,
@@ -112,9 +123,11 @@ public final class ChestDialogs {
                     if (audience instanceof Player p) service.openListDialog(p);
                 })));
 
-        Component title = lang.getChestTitle(index, chest.customName());
+        Component title = lang.getChestLabel(index, chest.customName(), chest.kind());
         return Dialog.create(builder -> builder.empty()
-                .base(DialogBase.builder(title).build())
+                .base(DialogBase.builder(title)
+                        .body(List.of(chestIconBody(chest)))
+                        .build())
                 .type(DialogType.multiAction(buttons, null, 1)));
     }
 
@@ -142,12 +155,50 @@ public final class ChestDialogs {
                     if (audience instanceof Player p) service.openDetailDialog(p, index);
                 }));
 
-        Component title = lang.getChestTitle(index, chest.customName());
+        Component title = lang.getChestLabel(index, chest.customName(), chest.kind());
         return Dialog.create(builder -> builder.empty()
                 .base(DialogBase.builder(title)
+                        .body(List.of(DialogBody.plainMessage(lang.getGui("dialog.rename-body"), BODY_WIDTH)))
                         .inputs(List.of(nameInput))
                         .build())
                 .type(DialogType.multiAction(List.of(save, cancel), null, 1)));
+    }
+
+    /**
+     * Detail-dialog body: a chest item icon with a centred description (slot count, plus the static
+     * "expires in" snapshot for expiring chests). Decorations and the item's own tooltip are hidden
+     * so only our description shows.
+     */
+    private DialogBody chestIconBody(ChestSummary chest) {
+        Component info = lang.getGui("dialog.detail-body", "size", Integer.toString(chest.size()));
+        Component expiry = expiryTooltip(chest);
+        if (expiry != null) {
+            info = info.appendNewline().append(expiry);
+        }
+        return DialogBody.item(ItemStack.of(Material.ENDER_CHEST))
+                .description(DialogBody.plainMessage(info, BODY_WIDTH))
+                .showDecorations(false)
+                .showTooltip(false)
+                .build();
+    }
+
+    /** List-button tooltip: slot count, plus a static "expires in" snapshot for expiring chests. */
+    private Component listTooltip(ChestSummary chest) {
+        Component tip = lang.getGui("dialog.slots", "size", Integer.toString(chest.size()));
+        Component expiry = expiryTooltip(chest);
+        return expiry == null ? tip : tip.appendNewline().append(expiry);
+    }
+
+    /**
+     * Static "expires in &lt;time&gt;" snapshot recomputed each time the dialog is built (a live
+     * ticking countdown is impossible with the static Dialog API). Null for chests that never expire.
+     */
+    private @Nullable Component expiryTooltip(ChestSummary chest) {
+        if (chest.expiresAt() == null) {
+            return null;
+        }
+        String remaining = DurationFormat.formatRemaining(chest.expiresAt() - System.currentTimeMillis());
+        return lang.getGui("dialog.expires-in", "time", remaining);
     }
 
     private static DialogAction click(BiConsumer<io.papermc.paper.dialog.DialogResponseView,

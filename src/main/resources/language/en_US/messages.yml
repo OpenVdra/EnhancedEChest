@@ -1,32 +1,44 @@
+# ============================================================================
+#  Chat messages for EnhancedEChest
+#  {prefix} is replaced with the value below. Lines are mostly plain white text;
+#  only dynamic values are written inline so messages read as full sentences.
+#  A line containing '<' is parsed as MiniMessage, otherwise as legacy '&' codes.
+# ============================================================================
+
 prefix: '&#9B59B6EɴʜᴀɴᴄᴇᴅEᴄʜᴇsᴛ &8⏩ &r'
 
 command:
-  not-player: '{prefix}&#FF4444Only players can use the ender chest.'
+  not-player: '{prefix}&fOnly players can use the ender chest.'
 
 chest:
-  load-failed: '{prefix}&#FF4444Could not load your ender chest. Please contact an admin.'
-  codec-failed: '{prefix}&#FF4444Your ender chest data could not be read. Please contact an admin.'
-  not-found: '{prefix}&#FF4444That ender chest no longer exists.'
-  unknown: '{prefix}&#FF4444No ender chest matches &e{query}&#FF4444.'
-  none: '{prefix}&#F0C857You do not have any ender chests yet.'
+  load-failed: '{prefix}&fCould not load your ender chest. Please contact an administrator.'
+  codec-failed: '{prefix}&fYour ender chest data could not be read. Please contact an administrator.'
+  not-found: '{prefix}&fThat ender chest no longer exists.'
+  unknown: '{prefix}&fNo ender chest matches "{query}".'
+  none: '{prefix}&fYou do not have any ender chests yet.'
+  # Shown (on the action bar) when a player tries to put an item into a temporary chest.
+  temp-take-only: '&fThis is a temporary chest. You can only take items out, not put them in.'
 
 migrate:
-  no-players: '{prefix}&#F0C857No players are online.'
-  complete: '{prefix}&7Migration complete: &a{migrated} migrated&7, &#F0C857{skipped} already done.'
-  player-offline: '{prefix}&e{player} &7is not online.'
-  success: '{prefix}&aMigrated &e{player}&a successfully.'
-  already-done: '{prefix}&e{player} &7was already migrated.'
+  no-players: '{prefix}&fNo players are online.'
+  complete: '{prefix}&fMigration complete. {migrated} migrated, {skipped} already done.'
+  player-offline: '{prefix}&f{player} is not online.'
+  success: '{prefix}&fMigrated {player} successfully.'
+  already-done: '{prefix}&f{player} was already migrated.'
 
 admin:
-  reload-success: '{prefix}&aConfiguration reloaded.'
-  player-not-found: '{prefix}&#FF4444Player &e{player}&#FF4444 was not found.'
-  invalid-size: '{prefix}&#FF4444Size must be a multiple of 9 between 9 and 54.'
-  chest-not-found: '{prefix}&#FF4444{player} has no ender chest with index &e{index}&#FF4444.'
-  chest-added: '{prefix}&aAdded Ender Chest &e{index}&a (&e{size}&a slots) to &e{player}&a.'
-  chest-resized: '{prefix}&aResized &e{player}&a ender chest &e{index}&a to &e{size}&a slots.'
-  chest-deleted: '{prefix}&aDeleted ender chest &e{index}&a of &e{player}&a.'
+  reload-success: '{prefix}&fConfiguration reloaded.'
+  player-not-found: '{prefix}&fPlayer {player} was not found.'
+  invalid-size: '{prefix}&fSize must be a multiple of 9 between 9 and 54.'
+  invalid-duration: '{prefix}&fInvalid duration "{duration}". Use a value like 20s, 5m, 1h, 7d, or 1d_2h_30m.'
+  chest-not-found: '{prefix}&f{player} has no ender chest with index {index}.'
+  chest-added: '{prefix}&fAdded ender chest {index} with {size} slots to {player}.'
+  chest-added-expiring: '{prefix}&fAdded ender chest {index} with {size} slots to {player}. It will expire in {duration}.'
+  chest-resized: '{prefix}&fResized ender chest {index} of {player} to {size} slots.'
+  chest-deleted: '{prefix}&fDeleted ender chest {index} of {player}. Its items were discarded.'
+  chest-deleted-spilled: '{prefix}&fDeleted ender chest {index} of {player}. Any items it held were moved to a temporary chest.'
 
 update:
-  available: '{prefix}&#F0C857New update available! &7(&f{current} &8→ &a{latest}&7)'
+  available: '{prefix}&fA new update is available. You are on {current}, and the latest is {latest}.'
   # Kept in MiniMessage so the download URL stays clickable (legacy '&' cannot do click events).
   download: '{prefix}<gray>Download: <click:open_url:{url}><aqua>{url}</aqua></click>'

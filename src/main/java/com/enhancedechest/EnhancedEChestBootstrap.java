@@ -50,6 +50,16 @@ public final class EnhancedEChestBootstrap implements PluginBootstrap {
         return builder.buildFuture();
     };
 
+    /** Suggests a few common durations for the optional {@code <duration>} argument of /ee add. */
+    private static final SuggestionProvider<CommandSourceStack> DURATIONS = (ctx, builder) -> {
+        for (String d : new String[]{"1h", "12h", "1d", "7d", "30d"}) {
+            if (d.startsWith(builder.getRemaining().toLowerCase())) {
+                builder.suggest(d);
+            }
+        }
+        return builder.buildFuture();
+    };
+
     /** Suggests the sender's own chests as {@code #index} and custom-name completions for /ec. */
     private static final SuggestionProvider<CommandSourceStack> OWN_CHESTS = (ctx, builder) -> {
         if (!(ctx.getSource().getSender() instanceof Player player)) {
@@ -130,7 +140,7 @@ public final class EnhancedEChestBootstrap implements PluginBootstrap {
                         .then(Commands.literal("reload")
                                 .requires(src -> src.getSender().hasPermission(ADMIN_RELOAD_PERMISSION))
                                 .executes(ctx -> ReloadCommand.execute(ctx.getSource())))
-                        // /ee add <player> <size>
+                        // /ee add <player> <size> [duration]
                         .then(Commands.literal("add")
                                 .requires(src -> src.getSender().hasPermission(ADMIN_ADD_PERMISSION))
                                 .then(Commands.argument("player", StringArgumentType.word())
@@ -140,7 +150,15 @@ public final class EnhancedEChestBootstrap implements PluginBootstrap {
                                                 .executes(ctx -> ChestAdminCommand.add(
                                                         ctx.getSource(),
                                                         StringArgumentType.getString(ctx, "player"),
-                                                        IntegerArgumentType.getInteger(ctx, "size"))))))
+                                                        IntegerArgumentType.getInteger(ctx, "size")))
+                                                // Optional duration → an expiring chest (e.g. 7d, 1h, 1d_12h).
+                                                .then(Commands.argument("duration", StringArgumentType.word())
+                                                        .suggests(DURATIONS)
+                                                        .executes(ctx -> ChestAdminCommand.add(
+                                                                ctx.getSource(),
+                                                                StringArgumentType.getString(ctx, "player"),
+                                                                IntegerArgumentType.getInteger(ctx, "size"),
+                                                                StringArgumentType.getString(ctx, "duration")))))))
                         // /ee resize <player> <index> <size>
                         .then(Commands.literal("resize")
                                 .requires(src -> src.getSender().hasPermission(ADMIN_RESIZE_PERMISSION))
@@ -154,7 +172,7 @@ public final class EnhancedEChestBootstrap implements PluginBootstrap {
                                                                 StringArgumentType.getString(ctx, "player"),
                                                                 IntegerArgumentType.getInteger(ctx, "index"),
                                                                 IntegerArgumentType.getInteger(ctx, "size")))))))
-                        // /ee delete <player> <index>
+                        // /ee delete <player> <index> [force]
                         .then(Commands.literal("delete")
                                 .requires(src -> src.getSender().hasPermission(ADMIN_DELETE_PERMISSION))
                                 .then(Commands.argument("player", StringArgumentType.word())
@@ -163,7 +181,13 @@ public final class EnhancedEChestBootstrap implements PluginBootstrap {
                                                 .executes(ctx -> ChestAdminCommand.delete(
                                                         ctx.getSource(),
                                                         StringArgumentType.getString(ctx, "player"),
-                                                        IntegerArgumentType.getInteger(ctx, "index"))))))
+                                                        IntegerArgumentType.getInteger(ctx, "index")))
+                                                // Literal 'force' → hard-delete (items lost); default spills to a temp chest.
+                                                .then(Commands.literal("force")
+                                                        .executes(ctx -> ChestAdminCommand.deleteForce(
+                                                                ctx.getSource(),
+                                                                StringArgumentType.getString(ctx, "player"),
+                                                                IntegerArgumentType.getInteger(ctx, "index")))))))
                         .build(),
                 "EnhancedEChest admin commands",
                 List.of("ee")

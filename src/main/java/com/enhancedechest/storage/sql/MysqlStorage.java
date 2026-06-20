@@ -16,6 +16,8 @@ public final class MysqlStorage extends AbstractSqlStorage {
                 container_data MEDIUMBLOB,
                 migrated       TINYINT(1)   NOT NULL DEFAULT 0,
                 last_updated   BIGINT       NOT NULL DEFAULT 0,
+                kind           SMALLINT     NOT NULL DEFAULT 0,
+                expires_at     BIGINT,
                 PRIMARY KEY (player_uuid, chest_index)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
             """;

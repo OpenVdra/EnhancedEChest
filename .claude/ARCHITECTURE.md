@@ -114,12 +114,16 @@ pool (pool size 1 for SQLite, configurable otherwise).
 | `container_data` | nullable serialized bytes (`ContainerCodec`) |
 | `migrated` | flag, meaningful on chest #1 only |
 | `last_updated` | write timestamp |
+| `kind` | `0` = NORMAL, `1` = TEMP (overflow chest) — see *Expiry & temporary chests* |
+| `expires_at` | nullable epoch-ms expiry; `NULL` = never. Indexed (`idx_enderchests_expires`) |
 
-Key operations: `createChest` (next index, first chest auto-primary), `ensureChest` (create at a
-fixed index if absent — used by migration), `resizeChest`, `deleteChest` (promotes the lowest-index
-survivor to primary if the deleted one was primary), `renameChest`, `setPrimary` (clear-then-set in a
-transaction), `isMigrated`/`setMigrated`. `saveChest` is **UPDATE-only** and never touches size, name,
-or primary.
+Key operations: `createChest` (next index, first **normal** chest auto-primary; optional `expiresAt`
+for an expiring granted chest), `ensureChest` (create at a fixed index if absent — used by migration),
+`resizeChest`, `deleteChest` (promotes the lowest-index **NORMAL** survivor to primary if the deleted
+one was primary), `renameChest`, `setPrimary` (clear-then-set in a transaction), `isMigrated`/`setMigrated`,
+plus the item-moving `spillShrink` / `spillRemove` and the sweeper query `findExpired`. `saveChest` is
+**UPDATE-only** and never touches size, name, or primary. Primary resolution (`SQL_PRIMARY`) and
+promotion (`SQL_MIN_INDEX`) both filter `kind = 0`, so temp chests are never primary.
 
 ## Serialization
 
@@ -127,12 +131,50 @@ or primary.
 is 54 and `SLOT_STEP` is 9. Decode failures throw `CodecException`, which the service surfaces to the
 player (`chest.codec-failed`) and refuses to open rather than risk clobbering stored data.
 
+## Expiry & temporary chests
+
+Chests can expire, and items that no longer fit anywhere spill into **temporary chests** instead of
+being lost silently.
+
+- **Temp chest (`kind = TEMP`)** — an overflow holder created automatically when items are cut off by
+  a shrink, a non-`force` delete, or a normal chest expiring with items inside. It always carries an
+  `expires_at` (config `temp-enderchest.expiry`, default `24h`), is never primary, and cannot be
+  renamed or set-as-main in the dialog (Open + Back only). It **auto-deletes the moment it is emptied**
+  (`save()` deletes the row instead of persisting an empty temp), and on expiry it is hard-deleted with
+  any remaining items **permanently lost**.
+- **Expiring normal chest** — `/ee add <player> <size> <duration>` grants a `kind = NORMAL` chest with
+  an `expires_at`. On expiry its items spill into a temp chest, then the chest is removed.
+
+**Sweeper** (`expiry/ExpirySweeper`): a FoliaLib async repeating timer at `temp-enderchest.check-interval`
+(default `5m`). Each tick runs `findExpired(now)` (one indexed query on a column that is `NULL` for
+almost every row) and routes each hit through the service — NORMAL → `removeChest(..., force=false)`
+(spill), TEMP → `removeChest(..., force=true)` (discard). Expiry is deliberately swept, **not** lazy on
+access, so the hot open/close path stays free of expiry filtering and the dangerous mutation is
+centralised in one serialized place.
+
+**Dupe-safety** (extends the open/save model): every item-moving op — shrink spill, delete spill,
+normal-chest expiry spill, temp auto-delete, temp expiry — goes through `EnderChestService`:
+
+1. `forceCloseIfOpen(owner, index)` closes the owner's GUI of the affected chest if online & open,
+   which fires its `save()` synchronously (registering a pending future) before the op proceeds.
+2. `runExclusive(owner, index, dbWork)` chains the work behind any pending save/op for that key via
+   `pendingSaves.compute` and registers its own marker, so a concurrent `open` waits for it.
+3. The actual row changes happen in **one transaction** (`spillShrink`: UPDATE original + INSERT temp;
+   `spillRemove`: INSERT temp + DELETE original + promote primary). The temp index is `MAX(chest_index)+1`
+   computed inside that same transaction, so items never exist in two rows visible to any outside reader.
+
+Encoding stays synchronous (`ContainerCodec`); only the DB write runs on the async executor, as
+everywhere else. `DurationFormat` (`util/`) parses the time strings (`20s`, `5m`, `1h`, `1d_2h_30m`;
+units `s m h d w mo y`, with `mo = 30d` and `y = 365d`) and formats the static "expires in" snapshot
+shown on dialog buttons (a live ticking countdown is impossible with the static Dialog API).
+
 ## Multi-chest UI (Dialog API)
 
 `gui/dialog/ChestDialogs` isolates Paper's experimental Dialog API. Three dialogs:
 
 - **list** — one button per owned chest → opens the detail dialog
-- **detail** — Open / Rename / Set-as-main / Back
+- **detail** — Open / Rename / Set-as-main / Back (temp chests show only Open / Back, plus an
+  "expires in" snapshot on the Open button)
 - **rename** — text input + Save / Cancel (separate dialog, no inline input on detail)
 
 Navigation avoids cursor recentering: forward transitions use client-side
@@ -151,8 +193,9 @@ There is never a window where the items exist in both places. Each player migrat
 
 ## Config & language
 
-`PluginConfig` reads `config.yml` (language, `enderchest.default-size`, database block, migration
-flag) and provides `isValidSize` / `sanitizeSize` (multiple of 9, clamped 9–54). `ConfigMigrations`
+`PluginConfig` reads `config.yml` (language, `enderchest.default-size`, the `temp-enderchest` block
+parsed via `DurationFormat`, database block, migration flag) and provides `isValidSize` /
+`sanitizeSize` (multiple of 9, clamped 9–54). `ConfigMigrations`
 defines key-rename rules applied by `YamlMigrator` on load so existing config/language files upgrade
 without manual edits.
 

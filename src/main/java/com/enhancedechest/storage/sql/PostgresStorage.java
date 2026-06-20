@@ -16,6 +16,8 @@ public final class PostgresStorage extends AbstractSqlStorage {
                 container_data BYTEA,
                 migrated       SMALLINT     NOT NULL DEFAULT 0,
                 last_updated   BIGINT       NOT NULL DEFAULT 0,
+                kind           SMALLINT     NOT NULL DEFAULT 0,
+                expires_at     BIGINT,
                 PRIMARY KEY (player_uuid, chest_index)
             )
             """;

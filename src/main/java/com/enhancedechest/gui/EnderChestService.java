@@ -2,6 +2,7 @@ package com.enhancedechest.gui;
 
 import com.enhancedechest.gui.dialog.ChestDialogs;
 import com.enhancedechest.lang.LanguageManager;
+import com.enhancedechest.model.ChestKind;
 import com.enhancedechest.model.ChestSummary;
 import com.enhancedechest.model.EnderChestData;
 import com.enhancedechest.serialization.CodecException;
@@ -13,9 +14,11 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -23,6 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 /**
  * Owns the open and save lifecycle of the custom ender chest GUIs, now multi-chest.
@@ -57,6 +61,9 @@ public final class EnderChestService {
     /** Size of the chest auto-created the first time a player ever opens their ender chest. */
     private final int defaultSize;
 
+    /** Lifetime, in milliseconds, of a temp chest created when items spill on shrink/delete/expire. */
+    private final long tempExpiryMillis;
+
     private final ConcurrentHashMap<SaveKey, CompletableFuture<Void>> pendingSaves =
             new ConcurrentHashMap<>();
 
@@ -68,14 +75,15 @@ public final class EnderChestService {
 
     public EnderChestService(LanguageManager lang, ContainerCodec codec,
                              EnderChestStorage storage, Logger logger, FoliaLib foliaLib,
-                             int defaultSize) {
-        this.lang        = lang;
-        this.codec       = codec;
-        this.storage     = storage;
-        this.logger      = logger;
-        this.foliaLib    = foliaLib;
-        this.defaultSize = defaultSize;
-        this.dialogs     = new ChestDialogs(this, lang);
+                             int defaultSize, long tempExpiryMillis) {
+        this.lang             = lang;
+        this.codec            = codec;
+        this.storage          = storage;
+        this.logger           = logger;
+        this.foliaLib         = foliaLib;
+        this.defaultSize      = defaultSize;
+        this.tempExpiryMillis = tempExpiryMillis;
+        this.dialogs          = new ChestDialogs(this, lang);
     }
 
     // ---- opening ----
@@ -198,9 +206,9 @@ public final class EnderChestService {
 
     private void doOpenInventory(Player player, EnderChestData data, @Nullable Location sourceBlock) {
         int size = data.size();
-        Component title = lang.getChestTitle(data.index(), data.customName());
+        Component title = lang.getChestLabel(data.index(), data.customName(), data.kind());
         Inventory inv = Bukkit.createInventory(
-                new EnderChestHolder(data.owner(), data.index(), size, sourceBlock),
+                new EnderChestHolder(data.owner(), data.index(), size, data.kind(), sourceBlock),
                 size, title);
 
         if (data.containerData() != null && data.containerData().length > 0) {
@@ -302,6 +310,18 @@ public final class EnderChestService {
         UUID uuid = holder.getOwner();
         int index = holder.getIndex();
 
+        // A temp chest that the player has fully emptied removes itself rather than persisting an
+        // empty row (the emptiness check is a fast in-memory scan; no decode needed). Serialized via
+        // runExclusive so a concurrent open waits, like any other item-moving operation.
+        if (holder.getKind() == ChestKind.TEMP && isInventoryEmpty(inventory)) {
+            runExclusive(uuid, index, () -> { storage.deleteChest(uuid, index); return null; })
+                    .exceptionally(e -> {
+                        logger.error("Failed to remove emptied temp chest {} for {}", index, uuid, e);
+                        return null;
+                    });
+            return;
+        }
+
         byte[] encoded;
         try {
             encoded = codec.encode(inventory.getContents());
@@ -336,15 +356,17 @@ public final class EnderChestService {
     }
 
     public CompletableFuture<Integer> createChestAsync(UUID owner, int size) {
-        return CompletableFuture.supplyAsync(() -> storage.createChest(owner, size), asyncExecutor);
+        return createChestAsync(owner, size, null);
     }
 
-    public CompletableFuture<Void> resizeAsync(UUID owner, int index, int size) {
-        return CompletableFuture.runAsync(() -> storage.resizeChest(owner, index, size), asyncExecutor);
+    /** Creates a NORMAL chest, expirable if {@code expiresAt} is non-null (epoch millis). */
+    public CompletableFuture<Integer> createChestAsync(UUID owner, int size, @Nullable Long expiresAt) {
+        return CompletableFuture.supplyAsync(() -> storage.createChest(owner, size, expiresAt), asyncExecutor);
     }
 
-    public CompletableFuture<Void> deleteAsync(UUID owner, int index) {
-        return CompletableFuture.runAsync(() -> storage.deleteChest(owner, index), asyncExecutor);
+    /** Convenience for an expirable granted chest: expires {@code durationMillis} from now. */
+    public CompletableFuture<Integer> addExpirableChest(UUID owner, int size, long durationMillis) {
+        return createChestAsync(owner, size, System.currentTimeMillis() + durationMillis);
     }
 
     public CompletableFuture<Void> renameAsync(UUID owner, int index, @Nullable String name) {
@@ -358,6 +380,154 @@ public final class EnderChestService {
     /** Runs the given action on the player's entity thread (helper for command/dialog callbacks). */
     public void runForPlayer(Player player, Runnable action) {
         foliaLib.getScheduler().runAtEntity(player, task -> action.run());
+    }
+
+    // ---- item-moving operations (shrink spill / delete spill / expiry) ----
+
+    /**
+     * Resizes a chest, spilling any cut-off items into a temp chest if it is shrunk below its used
+     * slots. Force-closes the owner's GUI first (flushing its save), then runs the load-decode-split
+     * exclusively per (owner, index) so no concurrent open sees a half-applied state. A grow, or a
+     * shrink that loses no items, is a plain resize.
+     */
+    public CompletableFuture<Void> resizeOrSpill(UUID owner, int index, int newSize) {
+        return forceCloseIfOpen(owner, index).thenCompose(v -> runExclusive(owner, index, () -> {
+            EnderChestData data = storage.loadChest(owner, index);
+            if (data == null) return null;
+
+            ItemStack[] all = decodeAll(data);
+            // Nothing occupies a slot at or beyond newSize → a plain resize loses no items.
+            if (lastUsedSlot(all) < newSize) {
+                storage.resizeChest(owner, index, newSize);
+                return null;
+            }
+
+            ItemStack[] visible  = Arrays.copyOfRange(all, 0, newSize);
+            ItemStack[] overflow = Arrays.copyOfRange(all, newSize, all.length);
+            byte[] visibleBytes  = codec.encode(visible);
+            byte[] overflowBytes = codec.encode(overflow);
+            storage.spillShrink(owner, index, newSize, visibleBytes, overflowBytes,
+                    requiredTempSize(overflow), System.currentTimeMillis() + tempExpiryMillis);
+            return null;
+        }));
+    }
+
+    /**
+     * Removes a chest. With {@code force} the row is hard-deleted (items lost immediately); otherwise
+     * any items are spilled into a temp chest first. Force-closes the owner's GUI, then performs the
+     * delete exclusively per (owner, index) so the swap is dupe-safe. Used by {@code /ee delete} and
+     * by the expiry sweeper (NORMAL → spill, TEMP → force).
+     */
+    public CompletableFuture<Void> removeChest(UUID owner, int index, boolean force) {
+        return forceCloseIfOpen(owner, index).thenCompose(v -> runExclusive(owner, index, () -> {
+            if (force) {
+                storage.deleteChest(owner, index);
+                return null;
+            }
+            EnderChestData data = storage.loadChest(owner, index);
+            byte[] items = null;
+            int tempSize = 0;
+            if (data != null && data.containerData() != null && data.containerData().length > 0
+                    && lastUsedSlot(decodeAll(data)) >= 0) {
+                // Reuse the already-encoded bytes; the temp chest mirrors the original chest's size.
+                items = data.containerData();
+                tempSize = data.size();
+            }
+            storage.spillRemove(owner, index, items, tempSize,
+                    System.currentTimeMillis() + tempExpiryMillis);
+            return null;
+        }));
+    }
+
+    /**
+     * Serializes arbitrary DB work for one (owner, index) behind any in-flight save/op for that key,
+     * registering it in {@code pendingSaves} so a concurrent {@code open} waits for it. The work runs
+     * on the async executor; the returned future completes with its result (or its failure).
+     */
+    private <T> CompletableFuture<T> runExclusive(UUID owner, int index, Supplier<T> dbWork) {
+        SaveKey key = new SaveKey(owner, index);
+        CompletableFuture<T> result = new CompletableFuture<>();
+        CompletableFuture<Void> marker = result.handle((v, e) -> null);
+        // Atomically chain after whatever is currently pending for this key.
+        pendingSaves.compute(key, (k, prev) -> {
+            CompletableFuture<Void> base = (prev != null) ? prev : CompletableFuture.completedFuture(null);
+            base.whenComplete((v, e) ->
+                    CompletableFuture.supplyAsync(dbWork, asyncExecutor).whenComplete((r, err) -> {
+                        if (err != null) result.completeExceptionally(err);
+                        else result.complete(r);
+                    }));
+            return marker;
+        });
+        marker.whenComplete((v, e) -> pendingSaves.remove(key, marker));
+        return result;
+    }
+
+    /**
+     * If the owner is online with exactly that chest open, closes it on their entity thread (which
+     * fires the InventoryCloseEvent → {@code save()} synchronously, registering its pending future).
+     * The returned future completes once the close has been dispatched, so the caller can then chain
+     * an exclusive op that will serialize behind the just-registered save.
+     */
+    private CompletableFuture<Void> forceCloseIfOpen(UUID owner, int index) {
+        Player player = Bukkit.getPlayer(owner);
+        if (player == null || !player.isOnline()) {
+            return CompletableFuture.completedFuture(null);
+        }
+        CompletableFuture<Void> done = new CompletableFuture<>();
+        foliaLib.getScheduler().runAtEntity(player, task -> {
+            try {
+                Inventory top = player.getOpenInventory().getTopInventory();
+                if (top.getHolder() instanceof EnderChestHolder h
+                        && h.getOwner().equals(owner) && h.getIndex() == index) {
+                    player.closeInventory();
+                }
+            } finally {
+                done.complete(null);
+            }
+        });
+        return done;
+    }
+
+    /** Decodes a chest's contents to a full MAX_SIZE array so all stored slots are visible. */
+    private ItemStack[] decodeAll(EnderChestData data) {
+        if (data.containerData() == null || data.containerData().length == 0) {
+            ItemStack[] empty = new ItemStack[ContainerCodec.MAX_SIZE];
+            Arrays.fill(empty, ItemStack.empty());
+            return empty;
+        }
+        try {
+            return codec.decode(data.containerData(), ContainerCodec.MAX_SIZE);
+        } catch (CodecException e) {
+            // Abort the spill rather than risk losing items to a bad decode; surfaces as a failure.
+            throw new RuntimeException("Codec failure during spill for chest " + data.index(), e);
+        }
+    }
+
+    /** Highest slot index holding a non-empty item, or -1 if the array is entirely empty. */
+    private static int lastUsedSlot(ItemStack[] items) {
+        for (int i = items.length - 1; i >= 0; i--) {
+            if (!isEmpty(items[i])) return i;
+        }
+        return -1;
+    }
+
+    /** Smallest valid chest size (multiple of 9, 9..54) that holds every non-empty slot in {@code items}. */
+    private static int requiredTempSize(ItemStack[] items) {
+        int last = lastUsedSlot(items);
+        if (last < 0) return ContainerCodec.SLOT_STEP;
+        int needed = ((last / ContainerCodec.SLOT_STEP) + 1) * ContainerCodec.SLOT_STEP;
+        return Math.max(ContainerCodec.SLOT_STEP, Math.min(ContainerCodec.MAX_SIZE, needed));
+    }
+
+    private boolean isInventoryEmpty(Inventory inventory) {
+        for (ItemStack item : inventory.getContents()) {
+            if (!isEmpty(item)) return false;
+        }
+        return true;
+    }
+
+    private static boolean isEmpty(ItemStack item) {
+        return item == null || item.getType().isAir();
     }
 
     // ---- shutdown ----
