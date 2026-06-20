@@ -25,15 +25,22 @@ permissions:
   enhancedechest.command.open:
     description: Open the ender chest GUI via command (/enderchest, /eclist). Block right-click never needs this.
     default: op
-  enhancedechest.admin.migrate.run:
-    description: Run migration for a specific player or all players
+  # Admin commands require the base node AND the command-specific node below (no inheritance).
+  enhancedechest.admin:
+    description: Base permission required for every /enhancedechest admin command
     default: op
   enhancedechest.admin.reload:
-    description: Reload the plugin configuration
+    description: Use /ee reload (also requires enhancedechest.admin)
     default: op
-  enhancedechest.admin:
-    description: Base permission for all /enhancedechest admin commands
+  enhancedechest.admin.migrate.run:
+    description: Use /ee migrate run (also requires enhancedechest.admin)
     default: op
-    children:
-      enhancedechest.admin.migrate.run: true
-      enhancedechest.admin.reload: true
+  enhancedechest.admin.add:
+    description: Use /ee add (also requires enhancedechest.admin)
+    default: op
+  enhancedechest.admin.resize:
+    description: Use /ee resize (also requires enhancedechest.admin)
+    default: op
+  enhancedechest.admin.delete:
+    description: Use /ee delete (also requires enhancedechest.admin)
+    default: op

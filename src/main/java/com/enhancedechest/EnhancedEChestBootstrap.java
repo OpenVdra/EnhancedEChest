@@ -23,10 +23,14 @@ public final class EnhancedEChestBootstrap implements PluginBootstrap {
 
     /** Permission to open the ender chest GUI via command ({@code /enderchest}, {@code /eclist}). */
     private static final String OPEN_GUI_PERMISSION = "enhancedechest.command.open";
-    /** Base permission gating every admin command; without it the {@code /enhancedechest} root is hidden. */
+    // Admin commands require the base node AND the command-specific node. Brigadier enforces both:
+    // the root literal checks the base, each subcommand checks its own node.
     private static final String ADMIN_BASE_PERMISSION = "enhancedechest.admin";
     private static final String ADMIN_RELOAD_PERMISSION = "enhancedechest.admin.reload";
     private static final String ADMIN_MIGRATE_PERMISSION = "enhancedechest.admin.migrate.run";
+    private static final String ADMIN_ADD_PERMISSION = "enhancedechest.admin.add";
+    private static final String ADMIN_RESIZE_PERMISSION = "enhancedechest.admin.resize";
+    private static final String ADMIN_DELETE_PERMISSION = "enhancedechest.admin.delete";
 
     /** Suggests names of currently online players for the <player> argument. */
     private static final SuggestionProvider<CommandSourceStack> ONLINE_PLAYERS = (ctx, builder) -> {
@@ -120,7 +124,7 @@ public final class EnhancedEChestBootstrap implements PluginBootstrap {
                                 .executes(ctx -> ReloadCommand.execute(ctx.getSource())))
                         // /ee add <player> <size>
                         .then(Commands.literal("add")
-                                .requires(src -> src.getSender().hasPermission(ADMIN_BASE_PERMISSION))
+                                .requires(src -> src.getSender().hasPermission(ADMIN_ADD_PERMISSION))
                                 .then(Commands.argument("player", StringArgumentType.word())
                                         .suggests(ONLINE_PLAYERS)
                                         .then(Commands.argument("size", IntegerArgumentType.integer(9, 54))
@@ -130,7 +134,7 @@ public final class EnhancedEChestBootstrap implements PluginBootstrap {
                                                         IntegerArgumentType.getInteger(ctx, "size"))))))
                         // /ee resize <player> <index> <size>
                         .then(Commands.literal("resize")
-                                .requires(src -> src.getSender().hasPermission(ADMIN_BASE_PERMISSION))
+                                .requires(src -> src.getSender().hasPermission(ADMIN_RESIZE_PERMISSION))
                                 .then(Commands.argument("player", StringArgumentType.word())
                                         .suggests(ONLINE_PLAYERS)
                                         .then(Commands.argument("index", IntegerArgumentType.integer(1))
@@ -142,7 +146,7 @@ public final class EnhancedEChestBootstrap implements PluginBootstrap {
                                                                 IntegerArgumentType.getInteger(ctx, "size")))))))
                         // /ee delete <player> <index>
                         .then(Commands.literal("delete")
-                                .requires(src -> src.getSender().hasPermission(ADMIN_BASE_PERMISSION))
+                                .requires(src -> src.getSender().hasPermission(ADMIN_DELETE_PERMISSION))
                                 .then(Commands.argument("player", StringArgumentType.word())
                                         .suggests(ONLINE_PLAYERS)
                                         .then(Commands.argument("index", IntegerArgumentType.integer(1))

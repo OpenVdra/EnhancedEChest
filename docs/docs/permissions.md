@@ -35,18 +35,32 @@ Open the ender chest GUI <strong>by command</strong>: <code>/enderchest</code> (
 
 ## Admin Permissions
 
+Admin commands need **two** nodes: the base `enhancedechest.admin` **plus** the command-specific node below. Granting the base alone does nothing — it does not inherit the children.
+
 <BaseTable :columns="['Permission', 'Description', 'Default']" grid="2fr 3fr 0.6fr">
 
 <PermRow permission="enhancedechest.admin" defaultVal="op">
-Base permission for all <code>/enhancedechest</code> (<code>/ee</code>) commands, including <code>/ee add</code>, <code>/ee resize</code>, and <code>/ee delete</code>. Includes <code>enhancedechest.admin.reload</code> and <code>enhancedechest.admin.migrate.run</code> as children. Without it, the <code>/enhancedechest</code> command is hidden.
+Base node required for <strong>every</strong> <code>/enhancedechest</code> (<code>/ee</code>) command. Must be combined with one of the specific nodes below. Without it, the <code>/enhancedechest</code> command is hidden.
 </PermRow>
 
 <PermRow permission="enhancedechest.admin.reload" defaultVal="op">
-Allows reloading the configuration with <code>/ee reload</code>.
+Use <code>/ee reload</code>.
 </PermRow>
 
 <PermRow permission="enhancedechest.admin.migrate.run" defaultVal="op">
-Allows running migration for a player or all online players with <code>/ee migrate run</code>.
+Use <code>/ee migrate run</code>.
+</PermRow>
+
+<PermRow permission="enhancedechest.admin.add" defaultVal="op">
+Use <code>/ee add</code>.
+</PermRow>
+
+<PermRow permission="enhancedechest.admin.resize" defaultVal="op">
+Use <code>/ee resize</code>.
+</PermRow>
+
+<PermRow permission="enhancedechest.admin.delete" defaultVal="op">
+Use <code>/ee delete</code>.
 </PermRow>
 
 </BaseTable>
