@@ -25,7 +25,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
+    compileOnly("io.papermc.paper:paper-api:26.1.2.build.72-stable")
 
     // Shaded and relocated — no server-side drivers required
     shade("com.zaxxer:HikariCP:7.1.0")
