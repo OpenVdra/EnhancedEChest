@@ -30,7 +30,9 @@ public final class ExpirySweeper {
     private final EnderChestStorage storage;
     private final FoliaLib foliaLib;
     private final Logger logger;
-    private final long intervalMillis;
+    // Runtime-tunable via /ee reload (see reschedule). Only touched on the main thread (start/stop/
+    // reschedule); the async sweep never reads it, so no extra synchronisation is needed.
+    private long intervalMillis;
 
     private WrappedTask task;
 
@@ -47,6 +49,25 @@ public final class ExpirySweeper {
     public void start() {
         task = foliaLib.getScheduler().runTimerAsync(
                 this::sweep, intervalMillis, intervalMillis, TimeUnit.MILLISECONDS);
+    }
+
+    /**
+     * Re-applies a possibly-changed sweep interval after a {@code /ee reload}.
+     *
+     * <p>No-op when the interval is unchanged, so repeated reloads neither reset the countdown nor
+     * churn timers. When it does change and the sweeper is running, the old timer is cancelled and a
+     * fresh one started — there is never more than one live task, so no leak. If the sweeper is not
+     * running the value is simply stored for the next {@link #start()}.
+     */
+    public void reschedule(long newIntervalMillis) {
+        if (newIntervalMillis == intervalMillis) {
+            return;
+        }
+        intervalMillis = newIntervalMillis;
+        if (task != null) {
+            stop();
+            start();
+        }
     }
 
     /** Cancels the repeating sweep. Safe to call even if never started. */

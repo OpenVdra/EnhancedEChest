@@ -19,6 +19,12 @@ temp-enderchest:
   check-interval: 5m
 
 database:
+  # NOTE: changes to ANY setting in this 'database' section require a FULL SERVER RESTART.
+  # /ee reload will NOT apply them — the connection pool is built once at startup and is kept on the
+  # old settings, because rebuilding it live could drop connections mid-save and risk item dupes.
+  # (Everything outside this section — language, default-size, temp-enderchest, migration — does
+  #  apply on /ee reload without a restart.)
+  #
   # Storage backend: sqlite | mysql | mariadb | postgres
   type: sqlite
   # SQLite: path relative to plugin data folder (default: enderchests.db)

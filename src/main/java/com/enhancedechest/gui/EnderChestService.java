@@ -60,11 +60,14 @@ public final class EnderChestService {
     private final FoliaLib foliaLib;
     private final ChestDialogs dialogs;
 
+    // Runtime-tunable via /ee reload (see applyConfig). volatile so the value written on the main
+    // thread during a reload is visible to the async open/close threads that read it.
+
     /** Size of the chest auto-created the first time a player ever opens their ender chest. */
-    private final int defaultSize;
+    private volatile int defaultSize;
 
     /** Lifetime, in milliseconds, of a temp chest created when items spill on shrink/delete/expire. */
-    private final long tempExpiryMillis;
+    private volatile long tempExpiryMillis;
 
     private final ConcurrentHashMap<SaveKey, CompletableFuture<Void>> pendingSaves =
             new ConcurrentHashMap<>();
@@ -86,6 +89,19 @@ public final class EnderChestService {
         this.defaultSize      = defaultSize;
         this.tempExpiryMillis = tempExpiryMillis;
         this.dialogs          = new ChestDialogs(this, lang);
+    }
+
+    /**
+     * Re-applies the runtime-tunable config values after a {@code /ee reload}.
+     *
+     * <p>Both fields only affect work started <i>after</i> this call: {@code defaultSize} is read when
+     * bootstrapping a brand-new chest, {@code tempExpiryMillis} when stamping a freshly spilled temp
+     * chest. In-flight opens/saves are untouched, so this is dupe-safe to call on the main thread while
+     * async storage work is pending. No new objects, threads, or tasks are allocated.
+     */
+    public void applyConfig(int defaultSize, long tempExpiryMillis) {
+        this.defaultSize      = defaultSize;
+        this.tempExpiryMillis = tempExpiryMillis;
     }
 
     // ---- opening ----
