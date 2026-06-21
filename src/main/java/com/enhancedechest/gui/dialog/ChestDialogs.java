@@ -48,11 +48,9 @@ public final class ChestDialogs {
     private static final int BUTTON_WIDTH = 180;
     private static final int BODY_WIDTH = 200;
 
-    // Icon picker grid: a fixed-size page so we only ever build ICON_PAGE_SIZE buttons per render,
-    // regardless of how many materials the server has. The first ICON_COLUMNS buttons form the control
-    // row (Search / Default / Prev / Next); the rest are the page's icons.
+    // Icon picker grid: a single scrollable multi-action grid (no paging, so browsing never re-pushes
+    // the dialog and never recentres the cursor). Search narrows the list when the catalog is large.
     private static final int ICON_COLUMNS = 4;
-    private static final int ICON_PAGE_SIZE = 28; // 7 rows of ICON_COLUMNS
     private static final int ICON_BUTTON_WIDTH = 150;
     private static final int ICON_SEARCH_MAX_LENGTH = 48;
 
@@ -178,7 +176,7 @@ public final class ChestDialogs {
 
             // Choose icon — forward, in-place to the (static) icon picker page 0 (no cursor reset).
             buttons.add(ActionButton.create(lang.getGui("dialog.choose-icon"), lang.getGui("dialog.choose-icon-desc"),
-                    BUTTON_WIDTH, DialogAction.staticAction(ClickEvent.showDialog(iconPickerDialog(chest, "", 0)))));
+                    BUTTON_WIDTH, DialogAction.staticAction(ClickEvent.showDialog(iconPickerDialog(chest, "")))));
 
             // Clear icon — only meaningful once an icon is set; mutates, so re-query and re-push.
             if (chest.icon() != null) {
@@ -223,38 +221,32 @@ public final class ChestDialogs {
     }
 
     /**
-     * Icon picker: a paged, searchable grid of every server material rendered with its in-game sprite
-     * (via {@link IconCatalog}). Only {@link #ICON_PAGE_SIZE} buttons are built per render, so the
-     * cost is independent of the catalog size. The control row (Search / Default / Prev / Next) is the
-     * first {@link #ICON_COLUMNS} buttons; Back is the dialog's exit action.
+     * Icon picker: a single, searchable, <b>scrollable</b> grid of every matching material rendered with
+     * its in-game sprite (via {@link IconCatalog}). The grid is intentionally <i>not</i> paged — the
+     * client scrolls the button list, so browsing icons never re-pushes the dialog from the server and
+     * therefore never recentres the cursor (paging buttons would, since their target page can only be
+     * server-pushed). Search narrows the list when the full catalog is unwieldy.
      *
-     * <p>Search reads the text input and re-shows page 0 of the typed filter. Prev/Next navigate the
-     * <i>captured</i> filter's result set (clamped at the ends), so paging is predictable regardless of
-     * unsubmitted text. Picking an icon, or Default, writes the change and returns to the detail dialog.
+     * <p>Layout: the control row (Search / Default) is the first buttons, the icons follow, and Back is
+     * the dialog's exit action (kept reachable while scrolling). Search reads the text input and
+     * re-shows the filtered list. Picking an icon, or Default, writes the change and returns to detail.
      *
-     * @param filter case-insensitive name filter this page was built for ("" = whole catalog)
-     * @param page   zero-based page index (clamped into range)
+     * @param filter case-insensitive name filter ("" = whole catalog)
      */
-    public Dialog iconPickerDialog(ChestSummary chest, String filter, int page) {
+    public Dialog iconPickerDialog(ChestSummary chest, String filter) {
         int index = chest.index();
         List<IconCatalog.Entry> results = IconCatalog.search(filter);
-        int total = results.size();
-        int pageCount = Math.max(1, (total + ICON_PAGE_SIZE - 1) / ICON_PAGE_SIZE);
-        int clamped = Math.max(0, Math.min(page, pageCount - 1));
-        int from = clamped * ICON_PAGE_SIZE;
-        int to = Math.min(from + ICON_PAGE_SIZE, total);
 
-        List<ActionButton> buttons = new ArrayList<>(ICON_COLUMNS + (to - from));
+        List<ActionButton> buttons = new ArrayList<>(results.size() + 2);
 
-        // ---- control row (exactly ICON_COLUMNS buttons → one clean grid row) ----
-        // Search: re-show page 0 filtered by the freshly typed text.
+        // Search: re-show the list filtered by the freshly typed text (an explicit, server-pushed action).
         buttons.add(ActionButton.create(lang.getGui("dialog.icon-search"), null, ICON_BUTTON_WIDTH,
                 click((view, audience) -> {
                     if (!(audience instanceof Player p)) return;
                     String typed = view.getText(ICON_SEARCH_INPUT);
                     String query = typed == null ? "" : typed.trim();
                     service.runForPlayer(p, () -> {
-                        if (p.isOnline()) p.showDialog(iconPickerDialog(chest, query, 0));
+                        if (p.isOnline()) p.showDialog(iconPickerDialog(chest, query));
                     });
                 })));
         // Default: clear the icon back to the ender-chest default.
@@ -264,27 +256,9 @@ public final class ChestDialogs {
                     service.setIconAsync(p.getUniqueId(), index, null)
                             .thenRun(() -> service.openDetailDialog(p, index));
                 })));
-        // Prev / Next: navigate the captured filter's pages (clamp re-shows the same page at the ends).
-        int prevPage = clamped - 1;
-        int nextPage = clamped + 1;
-        buttons.add(ActionButton.create(lang.getGui("dialog.icon-prev"), null, ICON_BUTTON_WIDTH,
-                click((view, audience) -> {
-                    if (!(audience instanceof Player p)) return;
-                    service.runForPlayer(p, () -> {
-                        if (p.isOnline()) p.showDialog(iconPickerDialog(chest, filter, prevPage));
-                    });
-                })));
-        buttons.add(ActionButton.create(lang.getGui("dialog.icon-next"), null, ICON_BUTTON_WIDTH,
-                click((view, audience) -> {
-                    if (!(audience instanceof Player p)) return;
-                    service.runForPlayer(p, () -> {
-                        if (p.isOnline()) p.showDialog(iconPickerDialog(chest, filter, nextPage));
-                    });
-                })));
 
-        // ---- this page's icon buttons ----
-        for (int i = from; i < to; i++) {
-            IconCatalog.Entry entry = results.get(i);
+        // One button per matching icon; the client scrolls the grid.
+        for (IconCatalog.Entry entry : results) {
             Component label = entry.sprite().append(Component.text(" "))
                     .append(Component.text(entry.displayName()));
             buttons.add(ActionButton.create(label, null, ICON_BUTTON_WIDTH,
@@ -300,10 +274,7 @@ public final class ChestDialogs {
                 .maxLength(ICON_SEARCH_MAX_LENGTH)
                 .build();
 
-        Component body = lang.getGui("dialog.icon-body",
-                "page", Integer.toString(clamped + 1),
-                "pages", Integer.toString(pageCount),
-                "count", Integer.toString(total));
+        Component body = lang.getGui("dialog.icon-body", "count", Integer.toString(results.size()));
 
         ActionButton back = ActionButton.create(lang.getGui("dialog.back"), null, ICON_BUTTON_WIDTH,
                 click((view, audience) -> {

@@ -45,19 +45,19 @@ dialog:
   # right below it). Edit the label and its tooltip together. Icon coloured, text white.
 
   # Open button — opens the chest inventory.
-  open: '<green>▶ <white>Open'
+  open: '<white>Open'
   open-desc: '<white>Open this chest.'
 
   # Rename button — opens the rename dialog (normal chests only).
-  rename: '<yellow>✎ <white>Rename'
+  rename: '<white>Rename'
   rename-desc: '<white>Give this chest a custom display name.'
 
   # Choose-icon button — opens the icon picker (normal chests only).
-  choose-icon: '<aqua>◆ <white>Choose icon'
+  choose-icon: '<white>Choose icon'
   choose-icon-desc: '<white>Pick an item to show as this chest''s icon in the list.'
 
   # Clear-icon button — resets to the default ender-chest icon (shown only when an icon is set).
-  clear-icon: '<gray>✖ <white>Clear icon'
+  clear-icon: '<red>✖ <white>Clear icon'
   clear-icon-desc: '<white>Remove this chest''s icon and use the default.'
 
   # Set-as-main button — makes this the chest /ec opens (normal chests only).
@@ -69,7 +69,7 @@ dialog:
   unset-main-desc: '<white>Stop using this chest as your main. /ec will open the management menu again.'
 
   # Back button — returns to the chest list.
-  back: '<gray>← <white>Back'
+  back: '<white>Back'
 
   # Close button — closes the chest list dialog (shown on the list as the exit action).
   close: '<red>✖ <white>Close'
@@ -83,18 +83,15 @@ dialog:
   # ===== Icon picker dialog =====
   # Title of the icon picker.
   icon-title: '<white>Choose Icon'
-  # Body line under the title. {page}/{pages} = current/total pages, {count} = matching items.
-  icon-body: '<white>Page {page}/{pages} — {count} items. Type a name and press Search.'
+  # Body line under the title. {count} = number of matching items (scroll the list to browse).
+  icon-body: '<white>{count} items — type a name and press Search to filter. Scroll to browse.'
   # Label of the search text input.
   icon-search-label: '<white>Search'
   # Search button — applies the typed filter.
-  icon-search: '<yellow>▶ <white>Search'
+  icon-search: '<white>Search'
   # Default button — clears the icon (back to the ender-chest default).
-  icon-default: '<gray>✖ <white>Default'
+  icon-default: '<white>Default'
   icon-default-desc: '<white>Use the default ender-chest icon.'
-  # Previous / next page buttons.
-  icon-prev: '<gray>◀ <white>Prev'
-  icon-next: '<white>Next <gray>▶'
 
   # ===== Tags & tooltips =====
   # Slot-count tooltip shown when hovering a chest in the list. {size} = slot count.
