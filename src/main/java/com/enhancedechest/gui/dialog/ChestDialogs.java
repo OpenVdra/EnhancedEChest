@@ -48,6 +48,9 @@ public final class ChestDialogs {
     private static final int BUTTON_WIDTH = 180;
     private static final int BODY_WIDTH = 200;
 
+    /** Key of the list dialog's edit-mode checkbox, read at click time to route chest buttons. */
+    private static final String EDIT_MODE_INPUT = "edit_mode";
+
     private final EnderChestService service;
     private final LanguageManager lang;
 
@@ -57,14 +60,26 @@ public final class ChestDialogs {
     }
 
     /**
-     * Top-level list: one button per chest, clicking opens that chest's detail dialog in place.
+     * Top-level list: one button per chest, plus an in-dialog "edit mode" checkbox.
+     *
+     * <p>The edit-mode checkbox decides what clicking a chest does, read fresh at click time:
+     * <ul>
+     *   <li><b>off</b> (default) — clicking a chest opens its inventory directly;</li>
+     *   <li><b>on</b> — clicking a chest opens its management detail dialog (rename, set main, …).</li>
+     * </ul>
+     * Because the mode lives in a {@linkplain DialogInput#bool boolean input} the client toggles
+     * locally, flipping it never reopens the dialog — so the cursor never recentres (a server-pushed
+     * rebuild would have). {@code editInitial} only seeds the checkbox's starting state, used to keep
+     * edit mode on when returning from a detail dialog's Back.
      *
      * @param canSetMain  whether the viewer may set a chest as their main (gated on the
      *                    open-by-command permission); threaded into each detail dialog
      * @param sourceBlock ender chest block this menu was opened from (for the lid close animation),
-     *                    or null when opened by command; threaded into each detail dialog's Open
+     *                    or null when opened by command; threaded into each chest's open/detail
+     * @param editInitial starting state of the edit-mode checkbox (false for a fresh open)
      */
-    public Dialog listDialog(List<ChestSummary> chests, boolean canSetMain, @Nullable Location sourceBlock) {
+    public Dialog listDialog(List<ChestSummary> chests, boolean canSetMain,
+                             @Nullable Location sourceBlock, boolean editInitial) {
         // Temporary chests always sort to the top so players notice them (they expire); within each
         // group the natural index order is preserved.
         List<ChestSummary> ordered = new ArrayList<>(chests);
@@ -74,13 +89,25 @@ public final class ChestDialogs {
 
         List<ActionButton> buttons = new ArrayList<>(ordered.size());
         for (ChestSummary chest : ordered) {
-            Component label = lang.getChestLabel(chest.index(), chest.customName(), chest.kind());
+            int index = chest.index();
+            Component label = lang.getChestLabel(index, chest.customName(), chest.kind());
             if (chest.primary()) {
                 label = label.append(Component.text(" ")).append(lang.getGui("dialog.main-tag"));
             }
-            // Forward, in-place: open this chest's detail dialog client-side (no cursor reset).
+            // Branch on the edit-mode checkbox at click time. Edit off: open the chest directly
+            // (opening an inventory dismisses the dialog, so its recentre is moot). Edit on: push the
+            // detail dialog from the player's thread, source block preserved for its Open animation.
             buttons.add(ActionButton.create(label, listTooltip(chest), BUTTON_WIDTH,
-                    DialogAction.staticAction(ClickEvent.showDialog(detailDialog(chest, canSetMain, sourceBlock)))));
+                    click((view, audience) -> {
+                        if (!(audience instanceof Player p)) return;
+                        if (Boolean.TRUE.equals(view.getBoolean(EDIT_MODE_INPUT))) {
+                            service.runForPlayer(p, () -> {
+                                if (p.isOnline()) p.showDialog(detailDialog(chest, canSetMain, sourceBlock));
+                            });
+                        } else {
+                            service.openChest(p, index, sourceBlock);
+                        }
+                    })));
         }
 
         // Dedicated close button (the dialog's exit action) — no action set means clicking it just
@@ -89,11 +116,18 @@ public final class ChestDialogs {
                 .width(BUTTON_WIDTH)
                 .build();
 
+        // In-dialog toggle: a checkbox the client flips locally, so switching modes never reopens the
+        // dialog (and so never recentres the cursor). Rendered in the body, above the chest buttons.
+        DialogInput editMode = DialogInput.bool(EDIT_MODE_INPUT, lang.getGui("dialog.edit-mode"))
+                .initial(editInitial)
+                .build();
+
         return Dialog.create(builder -> builder.empty()
                 .base(DialogBase.builder(lang.getGui("dialog.list-title"))
                         .body(List.of(DialogBody.plainMessage(lang.getGui("dialog.list-body"), BODY_WIDTH)))
+                        .inputs(List.of(editMode))
                         .build())
-                .type(DialogType.multiAction(buttons, close, columnsFor(buttons.size()))));
+                .type(DialogType.multiAction(buttons, close, columnsFor(ordered.size()))));
     }
 
     /**
@@ -149,9 +183,10 @@ public final class ChestDialogs {
             }
         }
 
+        // Back returns to the list in edit mode — the detail dialog is only reachable from there.
         buttons.add(ActionButton.create(lang.getGui("dialog.back"), null, BUTTON_WIDTH,
                 click((view, audience) -> {
-                    if (audience instanceof Player p) service.openListDialog(p);
+                    if (audience instanceof Player p) service.openListDialog(p, true, sourceBlock);
                 })));
 
         Component title = lang.getChestLabel(index, chest.customName(), chest.kind());

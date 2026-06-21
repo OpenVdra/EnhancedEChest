@@ -25,6 +25,11 @@ dialog:
   # Centred description shown under the title.
   list-body: '<white>Select a chest to open or manage.'
 
+  # Edit-mode checkbox shown in the list dialog's body. When ticked, clicking a chest opens its
+  # management menu (rename, set main, …); unticked (default), clicking a chest opens it directly.
+  # The client toggles it locally, so switching modes never reopens the dialog.
+  edit-mode: '<white>Edit mode (manage chests on click)'
+
   # ===== Detail dialog (a single chest) =====
   # Centred text shown next to the chest icon. {size} = slot count.
   detail-body: '<white>{size} slots'

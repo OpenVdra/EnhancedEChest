@@ -37,8 +37,12 @@ admin:
   chests-added: '{prefix}&fAdded {count} ender chests ({range}) with {size} slots to {player}.'
   chests-added-expiring: '{prefix}&fAdded {count} ender chests ({range}) with {size} slots to {player}. They will expire in {duration}.'
   chest-resized: '{prefix}&fResized ender chest {index} of {player} to {size} slots.'
-  chest-deleted: '{prefix}&fDeleted ender chest {index} of {player}. Its items were discarded.'
-  chest-deleted-spilled: '{prefix}&fDeleted ender chest {index} of {player}. Any items it held were moved to a temporary chest.'
+  # /ee delete <player> <count> [force] — removes the newest chests; the first chest is always kept.
+  no-chests-deletable: '{prefix}&f{player} has only their first ender chest, which cannot be deleted.'
+  chest-deleted-newest: '{prefix}&fDeleted the newest ender chest of {player}. Its items were discarded.'
+  chest-deleted-newest-spilled: '{prefix}&fDeleted the newest ender chest of {player}. Any items it held were moved to a temporary chest.'
+  chests-deleted-newest: '{prefix}&fDeleted the {count} newest ender chests of {player}. Their items were discarded.'
+  chests-deleted-newest-spilled: '{prefix}&fDeleted the {count} newest ender chests of {player}. Any items they held were moved to temporary chests.'
 
 update:
   available: '{prefix}&fA new update is available. You are on {current}, and the latest is {latest}.'

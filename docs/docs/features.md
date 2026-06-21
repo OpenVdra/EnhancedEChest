@@ -39,7 +39,7 @@ Players are no longer limited to one ender chest. Each player can own several, m
 <CardGrid>
 
 <FeatureCard icon="📋" title="Chest List Menu">
-Run <code>/eclist</code> to open a dialog listing every chest the player owns, each showing its slot count. From here players can open, rename, or pick which chest is their main.
+Run <code>/eclist</code> to open a dialog listing every chest the player owns, each showing its slot count. An <strong>Edit mode</strong> checkbox switches what clicking a chest does: with it off (the default) a chest opens straight away; tick it and clicking a chest opens its management menu instead, where players can rename it or pick which chest is their main. The checkbox toggles in place, so flipping it never reopens the dialog.
 </FeatureCard>
 
 <FeatureCard icon="⭐" title="Main Chest">

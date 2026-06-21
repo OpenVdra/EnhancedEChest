@@ -19,6 +19,7 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -143,7 +144,7 @@ public final class EnderChestService {
                             openChest(player, mainIndex, sourceBlock);
                         } else {
                             foliaLib.getScheduler().runAtEntity(player, task -> {
-                                if (player.isOnline()) player.showDialog(dialogs.listDialog(chests, canSetMain, sourceBlock));
+                                if (player.isOnline()) player.showDialog(dialogs.listDialog(chests, canSetMain, sourceBlock, false));
                             });
                         }
                     })
@@ -287,8 +288,21 @@ public final class EnderChestService {
 
     // ---- management dialog ----
 
-    /** Loads the player's chests and shows the /eclist management dialog. */
+    /** Loads the player's chests and shows the /eclist management dialog (edit mode off). */
     public void openListDialog(Player player) {
+        openListDialog(player, false, null);
+    }
+
+    /**
+     * Loads the player's chests and shows the management dialog with the edit-mode checkbox in the
+     * given starting state. A fresh open seeds it off; returning from a detail dialog's Back seeds it
+     * on so the player stays in edit mode. The checkbox itself toggles client-side without re-showing.
+     *
+     * @param editInitial starting state of the dialog's edit-mode checkbox
+     * @param sourceBlock ender chest block this menu was opened from (threaded through so direct opens
+     *                    still animate), or null when opened by command
+     */
+    public void openListDialog(Player player, boolean editInitial, @Nullable Location sourceBlock) {
         UUID uuid = player.getUniqueId();
         boolean canSetMain = canSetMain(player);
         listChestsAsync(uuid).thenAccept(chests ->
@@ -298,7 +312,7 @@ public final class EnderChestService {
                         player.sendMessage(lang.get("chest.none"));
                         return;
                     }
-                    player.showDialog(dialogs.listDialog(chests, canSetMain, null));
+                    player.showDialog(dialogs.listDialog(chests, canSetMain, sourceBlock, editInitial));
                 })
         ).exceptionally(e -> reportOpenFailure(player, e));
     }
@@ -477,6 +491,42 @@ public final class EnderChestService {
                     System.currentTimeMillis() + tempExpiryMillis);
             return null;
         }));
+    }
+
+    /**
+     * Bulk-removes the {@code count} newest (highest-index) NORMAL chests a player owns, spilling (or
+     * force-discarding) each, and completes with the number actually removed. The player's <i>first</i>
+     * chest — the lowest-indexed NORMAL chest — is always protected, so a player can never be left with
+     * no chests; deleting fewer than {@code count} when that is all that is eligible is not an error.
+     * Temp chests are ignored (they are transient and expire on their own).
+     *
+     * <p>Targets are snapshotted up front, then deleted sequentially: a spilling delete creates a fresh
+     * temp chest at a higher index, but those are not in the target list so they are never re-touched.
+     * Each per-index delete still serializes behind its own pending saves and force-closes an open GUI,
+     * so the bulk op is dupe-safe.
+     */
+    public CompletableFuture<Integer> removeNewestChests(UUID owner, int count, boolean force) {
+        return listChestsAsync(owner).thenCompose(chests -> {
+            // Only NORMAL chests are eligible; sorted ascending so element 0 is the protected first chest.
+            List<ChestSummary> normal = chests.stream()
+                    .filter(c -> c.kind() == ChestKind.NORMAL)
+                    .sorted(Comparator.comparingInt(ChestSummary::index))
+                    .toList();
+            if (normal.size() <= 1) {
+                return CompletableFuture.completedFuture(0);
+            }
+            // Everything except the protected first chest, newest (highest index) first, capped at count.
+            List<Integer> targets = normal.subList(1, normal.size()).stream()
+                    .map(ChestSummary::index)
+                    .sorted(Comparator.reverseOrder())
+                    .limit(Math.max(0, count))
+                    .toList();
+            CompletableFuture<Void> chain = CompletableFuture.completedFuture(null);
+            for (int index : targets) {
+                chain = chain.thenCompose(v -> removeChest(owner, index, force));
+            }
+            return chain.thenApply(v -> targets.size());
+        });
     }
 
     /**

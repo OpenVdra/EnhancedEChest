@@ -264,22 +264,24 @@ public final class EnhancedEchestBootstrap implements PluginBootstrap {
                                                                 StringArgumentType.getString(ctx, "player"),
                                                                 IntegerArgumentType.getInteger(ctx, "index"),
                                                                 IntegerArgumentType.getInteger(ctx, "size")))))))
-                        // /ee delete <player> <index> [force]
+                        // /ee delete <player> <count> [force] — delete the <count> newest chests
+                        // (highest indices); the player's first chest is always kept.
                         .then(Commands.literal("delete")
                                 .requires(src -> src.getSender().hasPermission(ADMIN_DELETE_PERMISSION))
                                 .then(Commands.argument("player", StringArgumentType.word())
                                         .suggests(ONLINE_PLAYERS)
-                                        .then(Commands.argument("index", IntegerArgumentType.integer(1))
+                                        .then(Commands.argument("count", IntegerArgumentType.integer(1))
+                                                .suggests(CHEST_COUNTS)
                                                 .executes(ctx -> ChestAdminCommand.delete(
                                                         ctx.getSource(),
                                                         StringArgumentType.getString(ctx, "player"),
-                                                        IntegerArgumentType.getInteger(ctx, "index")))
+                                                        IntegerArgumentType.getInteger(ctx, "count")))
                                                 // Literal 'force' → hard-delete (items lost); default spills to a temp chest.
                                                 .then(Commands.literal("force")
                                                         .executes(ctx -> ChestAdminCommand.deleteForce(
                                                                 ctx.getSource(),
                                                                 StringArgumentType.getString(ctx, "player"),
-                                                                IntegerArgumentType.getInteger(ctx, "index")))))))
+                                                                IntegerArgumentType.getInteger(ctx, "count")))))))
                         .build(),
                 "EnhancedEchest admin commands",
                 List.of("ee")
