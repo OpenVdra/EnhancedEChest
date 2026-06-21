@@ -29,8 +29,8 @@ A Paper plugin that gives every player larger, multi-chest ender storage backed 
 
 ## Requirements
 
-- Paper 1.21.11+ (or Folia / a Paper fork)
-- Java 21+
+- Paper 26.1.x (or Folia / a Paper fork) — this exact minor line only
+- Java 25
 
 ## Quick Start
 

@@ -1,6 +1,7 @@
 plugins {
     java
     id("com.gradleup.shadow") version "9.4.2"
+    id("xyz.jpenilla.run-paper") version "3.0.2"
 }
 
 val shade: Configuration by configurations.creating
@@ -12,7 +13,7 @@ group = "com.enhancedechest"
 version = "1.0.1"
 
 java {
-    toolchain.languageVersion.set(JavaLanguageVersion.of(21))
+    toolchain.languageVersion.set(JavaLanguageVersion.of(25))
 }
 
 repositories {
@@ -25,7 +26,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
+    compileOnly("io.papermc.paper:paper-api:26.1.2.build.72-stable")
 
     // Shaded and relocated — no server-side drivers required
     shade("com.zaxxer:HikariCP:7.1.0")
@@ -86,4 +87,8 @@ tasks.processResources {
     filesMatching(listOf("plugin.yml", "paper-plugin.yml")) {
         expand(props)
     }
+}
+
+tasks.runServer {
+    minecraftVersion("26.1.2")
 }

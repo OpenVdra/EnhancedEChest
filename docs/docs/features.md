@@ -116,6 +116,8 @@ EnhancedEchest uses a region-aware scheduler (FoliaLib) under the hood, so the s
 | **Folia** | ✅ |
 | **Purpur / Paper forks** | ✅ |
 
+Built and tested against **Minecraft 26.1.x** on **Java 25** — other Minecraft versions are not supported.
+
 All third-party libraries (database drivers, connection pool, scheduler) are shaded and relocated into the jar — **no extra downloads or server-side drivers required**.
 
 ---

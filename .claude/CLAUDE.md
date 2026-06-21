@@ -20,7 +20,8 @@ For the full design, read [ARCHITECTURE.md](ARCHITECTURE.md). For user-facing do
 
 ## Stack & constraints
 
-- **Java 21**, **Paper API 1.21.11**, Gradle Kotlin DSL, ShadowJar.
+- **Java 25**, **Paper API 26.1.2** (`paper-api:26.1.2.build.72-stable`; api-version `26.1.2`),
+  Gradle Kotlin DSL, ShadowJar.
 - Paper-only APIs are used (`paper-plugin.yml` bootstrapper, Brigadier commands, Dialog API) —
   the plugin does **not** run on plain Spigot/CraftBukkit.
 - All third-party libs are **shaded and relocated** under `com.enhancedechest.libs.*`

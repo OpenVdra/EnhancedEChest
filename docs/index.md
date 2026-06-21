@@ -33,7 +33,7 @@ features:
     details: Inventories load fresh on open and save immediately on close, with pending-save chaining that defeats dupe exploits.
     link: /docs/features
   - title: 🌿 Folia Ready
-    details: Built on a region-aware scheduler — runs on Spigot, Paper, and Folia without code changes.
+    details: Built on a region-aware scheduler — runs on Paper, Folia, and Paper forks without code changes.
     link: /docs/features
   - title: 🔓 Open Source
     details: EnhancedEchest is completely free and open source on GitHub. Fork it, build on it, or contribute back.
