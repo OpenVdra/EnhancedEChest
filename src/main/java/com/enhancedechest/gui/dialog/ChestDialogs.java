@@ -16,9 +16,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickCallback;
 import net.kyori.adventure.text.event.ClickEvent;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -150,7 +148,7 @@ public final class ChestDialogs {
     }
 
     /**
-     * Per-chest detail: Open / Rename / Set-as-main / Back.
+     * Per-chest detail: Open / Set-as-main / Rename / Choose icon / Back.
      *
      * @param canSetMain  whether to show the "set as main" button; hidden for viewers without the
      *                    open-by-command permission, for whom a main chest is meaningless
@@ -162,33 +160,16 @@ public final class ChestDialogs {
         boolean temp = chest.kind() == ChestKind.TEMP;
         List<ActionButton> buttons = new ArrayList<>(4);
 
-        // Open the actual inventory (closes the dialog; cursor position is moot once an inventory opens).
+        // Open first — the primary action, and the most common reason to be here.
         buttons.add(ActionButton.create(lang.getGui("dialog.open"), lang.getGui("dialog.open-desc"), BUTTON_WIDTH,
                 click((view, audience) -> {
                     if (audience instanceof Player p) service.openChest(p, index, sourceBlock);
                 })));
 
-        // Temp chests are transient overflow holders: no renaming, no setting as main. Only Open + Back.
+        // Temp chests are transient overflow holders: no main flag, no customisation. Only Open + Back.
         if (!temp) {
-            // Forward, in-place: go to the dedicated rename dialog client-side (no cursor reset).
-            buttons.add(ActionButton.create(lang.getGui("dialog.rename"), lang.getGui("dialog.rename-desc"), BUTTON_WIDTH,
-                    DialogAction.staticAction(ClickEvent.showDialog(renameDialog(chest)))));
-
-            // Choose icon — forward, in-place to the (static) icon picker page 0 (no cursor reset).
-            buttons.add(ActionButton.create(lang.getGui("dialog.choose-icon"), lang.getGui("dialog.choose-icon-desc"),
-                    BUTTON_WIDTH, DialogAction.staticAction(ClickEvent.showDialog(iconPickerDialog(chest, "")))));
-
-            // Clear icon — only meaningful once an icon is set; mutates, so re-query and re-push.
-            if (chest.icon() != null) {
-                buttons.add(ActionButton.create(lang.getGui("dialog.clear-icon"), lang.getGui("dialog.clear-icon-desc"),
-                        BUTTON_WIDTH, click((view, audience) -> {
-                            if (!(audience instanceof Player p)) return;
-                            service.setIconAsync(p.getUniqueId(), index, null)
-                                    .thenRun(() -> service.openDetailDialog(p, index));
-                        })));
-            }
-
-            // Set as main / Unset main — mutates data, so it re-queries and is re-pushed from the server.
+            // Set as main / Unset main — the highest-impact toggle (changes what /ec opens), so it sits
+            // right after Open. Mutates data, so it re-queries and is re-pushed from the server.
             if (canSetMain && !chest.primary()) {
                 buttons.add(ActionButton.create(lang.getGui("dialog.set-main"), lang.getGui("dialog.set-main-desc"),
                         BUTTON_WIDTH, click((view, audience) -> {
@@ -204,6 +185,14 @@ public final class ChestDialogs {
                                     .thenRun(() -> service.openDetailDialog(p, index));
                         })));
             }
+
+            // Appearance edits grouped together: Rename then Choose icon. Both forward in-place
+            // (client-side show_dialog), so they never recentre the cursor. Choose icon's picker has a
+            // "Default" button to drop back to the plain ender-chest icon, so no separate clear button.
+            buttons.add(ActionButton.create(lang.getGui("dialog.rename"), lang.getGui("dialog.rename-desc"), BUTTON_WIDTH,
+                    DialogAction.staticAction(ClickEvent.showDialog(renameDialog(chest)))));
+            buttons.add(ActionButton.create(lang.getGui("dialog.choose-icon"), lang.getGui("dialog.choose-icon-desc"),
+                    BUTTON_WIDTH, DialogAction.staticAction(ClickEvent.showDialog(iconPickerDialog(chest, "")))));
         }
 
         // Back returns to the list in edit mode — the detail dialog is only reachable from there.
@@ -215,7 +204,7 @@ public final class ChestDialogs {
         Component title = withIcon(chest, lang.getChestLabel(index, chest.customName(), chest.kind()));
         return Dialog.create(builder -> builder.empty()
                 .base(DialogBase.builder(title)
-                        .body(List.of(chestIconBody(chest)))
+                        .body(List.of(detailBody(chest)))
                         .build())
                 .type(DialogType.multiAction(buttons, null, 1)));
     }
@@ -333,23 +322,17 @@ public final class ChestDialogs {
     }
 
     /**
-     * Detail-dialog body: a chest item icon with a centred description (slot count, plus the static
-     * "expires in" snapshot for expiring chests). Decorations and the item's own tooltip are hidden
-     * so only our description shows.
+     * Detail-dialog body: a centred slot count, plus the static "expires in" snapshot for expiring
+     * chests. The chest's chosen icon is shown in the title (see {@link #withIcon}), so the body stays a
+     * clean centred message rather than an item body whose icon floats off to one side.
      */
-    private DialogBody chestIconBody(ChestSummary chest) {
+    private DialogBody detailBody(ChestSummary chest) {
         Component info = lang.getGui("dialog.detail-body", "size", Integer.toString(chest.size()));
         Component expiry = expiryTooltip(chest);
         if (expiry != null) {
             info = info.appendNewline().append(expiry);
         }
-        // Show the player's chosen icon as the real item model, falling back to the ender chest.
-        ItemStack icon = IconCatalog.item(chest.icon());
-        return DialogBody.item(icon != null ? icon : ItemStack.of(Material.ENDER_CHEST))
-                .description(DialogBody.plainMessage(info, BODY_WIDTH))
-                .showDecorations(false)
-                .showTooltip(false)
-                .build();
+        return DialogBody.plainMessage(info, BODY_WIDTH);
     }
 
     /** List-button tooltip: slot count, plus a static "expires in" snapshot for expiring chests. */

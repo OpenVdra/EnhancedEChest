@@ -54,8 +54,8 @@ For the full design, read [ARCHITECTURE.md](ARCHITECTURE.md). For user-facing do
   The main chest is **never auto-assigned**: `createChest`/`ensureChest` insert with `is_primary = 0` and
   deletes do not promote a survivor — it is set only by the dialog's "Set as main" (`setPrimary`). So
   `is_primary` is zero-or-one per player; `getPrimaryIndex`/`SQL_PRIMARY` falls back to the lowest NORMAL
-  index when none is flagged (keeps single-chest `/ec` working). The list main tag is a gold `★`,
-  matching the "Set as main" button's icon (`gui.yml dialog.main-tag`).
+  index when none is flagged (keeps single-chest `/ec` working). The list marks the main chest with a
+  gold `★` appended to its label (`gui.yml dialog.main-tag`); dialog buttons themselves are plain text.
   Don't reintroduce auto-primary — it breaks the "user explicitly chooses their main" model.
 
 ## Docs site

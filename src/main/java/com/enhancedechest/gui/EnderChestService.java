@@ -110,15 +110,19 @@ public final class EnderChestService {
     /**
      * Default open entry point for {@code /enderchest} and right-click:
      * <ul>
-     *   <li>0 or 1 chest — opens that chest directly (creating chest #1 if the player owns none);</li>
-     *   <li>2+ chests, an explicit main is set <i>and</i> the player may use it — opens the main directly;</li>
-     *   <li>2+ chests otherwise — opens the management list dialog so the player picks (or sets a main).</li>
+     *   <li>0 or 1 normal chest and no temp chest — opens that chest directly (creating chest #1 if
+     *       the player owns none);</li>
+     *   <li>2+ normal chests, no temp chest, an explicit main is set <i>and</i> the player may use it
+     *       — opens the main directly;</li>
+     *   <li>otherwise — opens the management list dialog so the player picks (or sets a main).</li>
      * </ul>
      *
      * <p>A main is never auto-assigned at creation, so a multi-chest player who has not chosen one
      * always lands on the management dialog. Setting a main returns them to the open-directly path.
      * Players without the open-by-command permission can never have an effective main, so with 2+
-     * chests they always get the dialog. {@code /eclist} still reaches the dialog regardless.
+     * chests they always get the dialog. Any TEMP (overflow) chest also forces the dialog, since
+     * spilled items can only be retrieved from the list. {@code /eclist} still reaches the dialog
+     * regardless.
      *
      * @param sourceBlock ender chest block location if opened via right-click; null for command/dialog
      */
@@ -129,14 +133,21 @@ public final class EnderChestService {
             closeExistingGui(player);
             listChestsAsync(uuid)
                     .thenAccept(chests -> {
-                        // 0 or 1 chest: open it directly (bootstrapping chest #1 if the player owns none).
-                        if (chests.size() <= 1) {
+                        // Spilled items live in TEMP chests that can ONLY be retrieved from the list
+                        // dialog, so any temp chest forces the dialog regardless of how many normal
+                        // chests exist (otherwise a single-chest player could never reach the overflow).
+                        boolean hasTemp = chests.stream().anyMatch(c -> c.kind() == ChestKind.TEMP);
+                        long normalCount = chests.stream().filter(c -> c.kind() == ChestKind.NORMAL).count();
+                        // 0 or 1 normal chest and nothing spilled: open it directly (bootstrapping
+                        // chest #1 if the player owns none).
+                        if (!hasTemp && normalCount <= 1) {
                             openPrimaryChest(player, uuid, sourceBlock);
                             return;
                         }
                         // 2+ chests: only an explicitly-flagged main, set by a player who may use it,
-                        // bypasses the dialog. Otherwise show the management list.
-                        Integer mainIndex = canSetMain
+                        // bypasses the dialog — and never while a temp chest is awaiting recovery.
+                        // Otherwise show the management list.
+                        Integer mainIndex = (!hasTemp && canSetMain)
                                 ? chests.stream().filter(ChestSummary::primary)
                                         .map(ChestSummary::index).findFirst().orElse(null)
                                 : null;

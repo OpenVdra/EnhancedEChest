@@ -35,6 +35,7 @@ dependencies {
     shade("org.mariadb.jdbc:mariadb-java-client:3.5.9")   // compatible with MySQL 5.7+ and 8.x
     shade("org.postgresql:postgresql:42.7.11")
     shade("com.tcoded:FoliaLib:0.5.2")
+    shade("org.bstats:bstats-bukkit:3.2.1")
 
     // Paper bundles sqlite-jdbc on the server classpath; compileOnly is sufficient
     compileOnly("org.xerial:sqlite-jdbc:3.53.2.0")
@@ -73,6 +74,7 @@ tasks.shadowJar {
     relocate("org.postgresql",   "com.enhancedechest.libs.postgresql")
     relocate("com.ongres",       "com.enhancedechest.libs.ongres")
     relocate("com.tcoded.folialib", "com.enhancedechest.libs.folialib")
+    relocate("org.bstats",          "com.enhancedechest.libs.bstats")
 
     mergeServiceFiles()
     // destinationDirectory.set(file("C:\\Users\\Admin\\Desktop\\TestServer\\plugins"))
