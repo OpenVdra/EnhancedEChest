@@ -58,3 +58,16 @@
     font-size: 0.85rem;
     color: var(--vp-c-text-3);
 }
+
+/* Centered, framed screenshot. Clears the CardGrid above it and scales down
+   gracefully on narrow viewports instead of using fixed width/height. */
+.feature-shot {
+    display: block;
+    width: 100%;
+    max-width: 360px;
+    height: auto;
+    margin: 32px auto;
+    border-radius: 12px;
+    border: 1px solid var(--vp-c-border);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
+}
