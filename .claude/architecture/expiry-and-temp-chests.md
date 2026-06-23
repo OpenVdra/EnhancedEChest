@@ -25,7 +25,8 @@ serialized place.
 ## Dupe-safety for item-moving ops
 
 Every item-moving op — shrink spill, delete spill, normal-chest expiry spill, temp auto-delete, temp
-expiry — goes through `EnderChestService` and reuses the model in
+expiry — goes through `ChestSpillService` (which delegates the force-close + exclusive run to
+`ChestSessionManager`) and reuses the model in
 [concurrency-and-dupe-safety.md](concurrency-and-dupe-safety.md):
 
 1. `forceCloseAll(owner, index)` closes the GUI of **every** viewer of the affected chest, then persists

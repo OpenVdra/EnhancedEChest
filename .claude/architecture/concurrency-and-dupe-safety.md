@@ -12,9 +12,12 @@ time. This is enforced on two levels:
 - **At the DB** — a chest is loaded fresh on its first open and written back when its **last** viewer
   closes; a re-open waits for any in-flight save of that same chest first (`pendingSaves` / `waitPending`).
 
-All of this lives in `EnderChestService`.
+The dupe-safety core (the `sessions` registry, attach/detach, `runExclusive`, `forceCloseAll`) lives in
+one closed class, `ChestSessionManager` (package `com.enhancedechest.service`). The GUI-flow layers sit
+on top of it: `ChestOpener` decides *what* to open and drives the dialogs, `ChestSpillService` runs the
+item-moving ops, and all async storage work is dispatched through the shared `DbExecutor`.
 
-## Open routing (`/ec`, right-click) — `open(player, sourceBlock)`
+## Open routing (`/ec`, right-click) — `ChestOpener.open(player, sourceBlock)`
 
 Lists the player's chests and decides what to show (unchanged by the shared-session work):
 
@@ -31,7 +34,7 @@ list marks the main with a gold `★`. See [ui-dialogs.md](ui-dialogs.md) and
 
 ## The shared live-inventory registry
 
-`EnderChestService.sessions` is a `ConcurrentHashMap<SaveKey(owner,index), Session>`. A `Session` holds:
+`ChestSessionManager.sessions` is a `ConcurrentHashMap<SaveKey(owner,index), Session>`. A `Session` holds:
 
 | field | meaning |
 |-------|---------|
@@ -46,10 +49,11 @@ thread on Paper, the global region thread on Folia (`foliaLib.getScheduler().isG
 `runNextTick`). This removes registry-level races on both platforms. The DB read/write stays async; the
 synchronous *encode* only ever happens once **all** viewers have closed, so it never races a live edit.
 
-### Opening — `openShared` is the single funnel
+### Opening — `ChestSessionManager.open` is the single funnel
 
-Every open path goes through `openShared(player, owner, index, sourceBlock)`:
-`open` → `openPrimaryChest`/`openChest`; the dialog "Open" button → `openChest`; admin → `adminOpen`.
+Every open path goes through `ChestSessionManager.open(player, owner, index, sourceBlock)` (formerly
+`openShared`): `ChestOpener.open` → `openPrimaryChest`/`openChest`; the dialog "Open" button →
+`openChest`; admin → `adminOpen` — all of which call `sessions.open(...)`.
 **If you add a new way to open a chest, route it here** — a second independently-loaded `Inventory`
 re-introduces duping.
 
@@ -69,7 +73,7 @@ re-introduces duping.
 
 ### Closing & saving — `detach` + `persist`
 
-The GUI close and quit listeners call `service.detach(player, holder)` (they no longer call `save`):
+The GUI close and quit listeners call `ChestSessionManager.detach(player, holder)` (they no longer call `save`):
 
 1. On the global thread, remove the player from `viewers` (and play the close animation from their
    `viewerBlocks` entry).
@@ -118,8 +122,10 @@ full item-moving transaction model.
 ## Threading summary
 
 - Storage methods are **synchronous** and thread-agnostic (see `EnderChestStorage` Javadoc).
-- `EnderChestService` is the **only** dispatcher onto `asyncExecutor` (daemon cached pool `EnhancedEchest-db`).
+- The `com.enhancedechest.service` layer is the **only** dispatcher onto the async pool, and it goes
+  through the shared `DbExecutor` (daemon cached pool `EnhancedEchest-db`).
 - Session bookkeeping is single-threaded via `onGlobal`.
 - Anything touching a player/inventory/block runs on the right region thread via FoliaLib.
-- On shutdown, `persistOpenSessions()` saves every still-open session, then `flushPendingSaves()` blocks
-  (≤30s) for all writes before the executor and storage close.
+- On shutdown, `ChestSessionManager.shutdown()` runs `persistOpenSessions()` (saves every still-open
+  session) then `flushPendingSaves()` (blocks ≤30s for all writes); only then does `DbExecutor.shutdown()`
+  close the pool, and storage closes last.

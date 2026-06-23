@@ -37,9 +37,15 @@ com.enhancedechest
 ├── command/
 │   ├── EnderChestOpenCommand        /enderchest (open, #index, name), /eclist
 │   └── admin/ChestAdminCommand      /ee add | resize | delete | view  (+ reload, migrate run)
+├── service/
+│   ├── ChestSessionManager   dupe-safety core: shared live-inventory sessions registry, attach/detach,
+│   │                         pending-save tracking, runExclusive / forceCloseAll (one closed class)
+│   ├── ChestOpener           open routing (/ec, /eclist, right-click, /ee view) + dialog orchestration
+│   ├── ChestSpillService     item-moving ops: resize/delete spill, bulk delete, expiry disposal
+│   ├── StorageGateway        async wrappers over EnderChestStorage (list/create/rename/icon/primary)
+│   ├── PlayerSettingsCache   write-through settings cache, bounded by online players
+│   └── DbExecutor            shared daemon async pool (EnhancedEchest-db) for all storage dispatch
 ├── gui/
-│   ├── EnderChestService     open/save lifecycle, shared live-inventory sessions, async dispatch,
-│   │                         pending-save tracking, item-moving ops, settings cache
 │   ├── EnderChestHolder      InventoryHolder carrying owner, index, size, kind
 │   ├── EnderChestAnimator    ender chest block lid open/close animation (Lidded API)
 │   └── dialog/ChestDialogs   Paper Dialog API menus (list / detail / rename / icon) — isolated here
@@ -67,8 +73,10 @@ com.enhancedechest
 1. **Bootstrap** (`EnhancedEchestBootstrap`): runs before enable; registers the `/ec` and
    `/enhancedechest` command trees against the Brigadier `Commands` registrar, gated by `.requires(...)`.
 2. **Enable** (`EnhancedEchestPlugin#onEnable`): loads config + language, builds the storage backend
-   (`StorageFactory.create`) and calls `init()` (creates schema), builds the `ContainerCodec` and
-   `EnderChestService`, registers listeners, preloads online players' settings, kicks off the async
-   update check, and prints a startup banner noting the detected platform (Folia / Paper).
-3. **Disable** (`onDisable`): `EnderChestService.shutdown()` persists every still-open session, flushes
-   all pending DB saves (blocking up to 30s), and shuts down the executor **before** `storage.close()`.
+   (`StorageFactory.create`) and calls `init()` (creates schema), builds the `ContainerCodec` and the
+   `service` layer (`DbExecutor` → `StorageGateway`/`PlayerSettingsCache` → `ChestSessionManager` →
+   `ChestSpillService` → `ChestOpener`), registers listeners, preloads online players' settings, kicks
+   off the async update check, and prints a startup banner noting the detected platform (Folia / Paper).
+3. **Disable** (`onDisable`): `ChestSessionManager.shutdown()` persists every still-open session and
+   flushes all pending DB saves (blocking up to 30s), then `PlayerSettingsCache.clear()` and
+   `DbExecutor.shutdown()` close the pool — all **before** `storage.close()`.

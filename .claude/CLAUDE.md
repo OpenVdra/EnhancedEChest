@@ -36,12 +36,15 @@ For the full design, read [ARCHITECTURE.md](ARCHITECTURE.md). For user-facing do
 - **Threading / Folia:** all scheduling goes through `FoliaLib` so the jar runs on Paper/Folia.
   `runAsync` / `runAtEntity` / `runAtLocation` take a `Consumer<WrappedTask>`, **not** a `Runnable`;
   the `*Later` variants have `Runnable` overloads. Never touch entities/blocks off their region thread.
-- **DB access is synchronous** in the storage layer; `EnderChestService` is the only place allowed to
-  dispatch storage calls onto the async executor. Don't call storage from a region/main thread.
+- **DB access is synchronous** in the storage layer; the `com.enhancedechest.service` layer is the only
+  place allowed to dispatch storage calls onto the async executor, and it does so through the shared
+  `DbExecutor` (pool `EnhancedEchest-db`). Don't call storage from a region/main thread.
 - **Dupe-safety is load-bearing** — do not "optimize" away the model: one **shared `Inventory` per open
   chest** (so concurrent viewers can't dupe), load-fresh on first open, save on **last** viewer close,
-  pending-save-wait on reopen. All open paths must funnel through `openShared`; session bookkeeping is
-  single-threaded via `onGlobal`. Encoding happens sync; only the DB write is async. Full detail:
+  pending-save-wait on reopen. All open paths must funnel through `ChestSessionManager.open`; session
+  bookkeeping is single-threaded via `onGlobal`. The whole dupe-safety core (the `sessions` registry,
+  `runExclusive`, `forceCloseAll`) lives in the one closed class `ChestSessionManager` — keep it there.
+  Encoding happens sync; only the DB write is async. Full detail:
   [architecture/concurrency-and-dupe-safety.md](architecture/concurrency-and-dupe-safety.md).
 - **Commands** are registered with Paper Brigadier in `EnhancedEchestBootstrap` (LifecycleEvents.COMMANDS),
   not in `plugin.yml`. Permissions default to `op`.
@@ -50,7 +53,7 @@ For the full design, read [ARCHITECTURE.md](ARCHITECTURE.md). For user-facing do
   clickable update link stays MiniMessage. Keys live in `language/<locale>/{messages,gui}.yml`.
 - **Config / language migrations:** `ConfigMigrations` + `YamlMigrator` rename keys on load so existing
   installs upgrade cleanly. Add a rename rule there rather than silently changing a key name.
-- **Open routing & the "main" chest** (`EnderChestService.open`): `/ec` and right-click decide between
+- **Open routing & the "main" chest** (`ChestOpener.open`): `/ec` and right-click decide between
   opening a chest directly vs. showing the `/eclist` management dialog —
   - **0–1 chest** → open it directly (bootstrapping chest #1 if none).
   - **2+ chests + an explicit main flagged + caller has `enhancedechest.command.open`** → open the main directly.

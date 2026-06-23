@@ -1,7 +1,7 @@
 package com.enhancedechest.listener;
 
 import com.enhancedechest.gui.EnderChestHolder;
-import com.enhancedechest.gui.EnderChestService;
+import com.enhancedechest.service.ChestSessionManager;
 import com.tcoded.folialib.FoliaLib;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.entity.Player;
@@ -23,7 +23,7 @@ import org.bukkit.inventory.Inventory;
 @RequiredArgsConstructor
 public final class PlayerQuitListener implements Listener {
 
-    private final EnderChestService service;
+    private final ChestSessionManager sessions;
     @SuppressWarnings("unused") // retained for stable constructor wiring; detach handles animation now
     private final FoliaLib foliaLib;
 
@@ -33,6 +33,6 @@ public final class PlayerQuitListener implements Listener {
         Inventory top = player.getOpenInventory().getTopInventory();
         if (!(top.getHolder() instanceof EnderChestHolder ecHolder)) return;
 
-        service.detach(player, ecHolder);
+        sessions.detach(player, ecHolder);
     }
 }

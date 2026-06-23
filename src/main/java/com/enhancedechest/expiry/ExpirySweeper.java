@@ -1,7 +1,7 @@
 package com.enhancedechest.expiry;
 
-import com.enhancedechest.gui.EnderChestService;
 import com.enhancedechest.model.ChestKind;
+import com.enhancedechest.service.ChestSpillService;
 import com.enhancedechest.storage.EnderChestStorage;
 import com.tcoded.folialib.FoliaLib;
 import com.tcoded.folialib.wrapper.task.WrappedTask;
@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit;
  *
  * <p>Runs on a FoliaLib async repeating timer at the configured {@code check-interval}. Each sweep
  * queries the (indexed) {@code expires_at} column — cheap, since it is NULL for almost every row —
- * and routes each hit through {@link EnderChestService}:
+ * and routes each hit through {@link ChestSpillService}:
  * <ul>
  *   <li>a NORMAL chest is removed with its items spilled into a temp chest ({@code force = false});</li>
  *   <li>a TEMP chest is hard-deleted, its remaining items lost ({@code force = true}).</li>
@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit;
  */
 public final class ExpirySweeper {
 
-    private final EnderChestService service;
+    private final ChestSpillService spillService;
     private final EnderChestStorage storage;
     private final FoliaLib foliaLib;
     private final Logger logger;
@@ -36,9 +36,9 @@ public final class ExpirySweeper {
 
     private WrappedTask task;
 
-    public ExpirySweeper(EnderChestService service, EnderChestStorage storage,
+    public ExpirySweeper(ChestSpillService spillService, EnderChestStorage storage,
                          FoliaLib foliaLib, Logger logger, long intervalMillis) {
-        this.service        = service;
+        this.spillService   = spillService;
         this.storage        = storage;
         this.foliaLib       = foliaLib;
         this.logger         = logger;
@@ -84,7 +84,7 @@ public final class ExpirySweeper {
             List<EnderChestStorage.ExpiredRef> expired = storage.findExpired(System.currentTimeMillis());
             for (EnderChestStorage.ExpiredRef ref : expired) {
                 // TEMP → hard delete (items lost); NORMAL → spill items into a fresh temp chest.
-                service.removeChest(ref.owner(), ref.index(), ref.kind() == ChestKind.TEMP);
+                spillService.removeChest(ref.owner(), ref.index(), ref.kind() == ChestKind.TEMP);
             }
         } catch (Exception e) {
             logger.error("Expiry sweep failed", e);

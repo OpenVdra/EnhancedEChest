@@ -2,8 +2,10 @@ package com.enhancedechest.command.admin;
 
 import com.enhancedechest.EnhancedEchestPlugin;
 import com.enhancedechest.config.PluginConfig;
-import com.enhancedechest.gui.EnderChestService;
 import com.enhancedechest.lang.LanguageManager;
+import com.enhancedechest.service.ChestOpener;
+import com.enhancedechest.service.ChestSpillService;
+import com.enhancedechest.service.StorageGateway;
 import com.enhancedechest.util.DurationFormat;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import net.kyori.adventure.text.Component;
@@ -117,7 +119,7 @@ public final class ChestAdminCommand {
         CompletableFuture<List<Integer>> chain = CompletableFuture.completedFuture(new ArrayList<>());
         for (int i = 0; i < count; i++) {
             chain = chain.thenCompose(indices ->
-                    ctx.service.createChestAsync(ctx.target, size, expiresAt).thenApply(index -> {
+                    ctx.storageGateway.createChestAsync(ctx.target, size, expiresAt).thenApply(index -> {
                         indices.add(index);
                         return indices;
                     }));
@@ -134,14 +136,14 @@ public final class ChestAdminCommand {
             return 0;
         }
 
-        ctx.service.listChestsAsync(ctx.target).thenAccept(chests -> {
+        ctx.storageGateway.listChestsAsync(ctx.target).thenAccept(chests -> {
             if (chests.stream().noneMatch(c -> c.index() == index)) {
                 ctx.sender.sendMessage(ctx.lang.get("admin.chest-not-found",
                         "player", playerName, "index", Integer.toString(index)));
                 return;
             }
             // Routes through the spill-aware path: a shrink below used slots overflows to a temp chest.
-            ctx.service.resizeOrSpill(ctx.target, index, size).thenRun(() ->
+            ctx.spillService.resizeOrSpill(ctx.target, index, size).thenRun(() ->
                     ctx.sender.sendMessage(ctx.lang.get("admin.chest-resized",
                             "player", playerName,
                             "index", Integer.toString(index),
@@ -168,7 +170,7 @@ public final class ChestAdminCommand {
         Ctx ctx = resolve(source, playerName);
         if (ctx == null) return 0;
 
-        ctx.service.removeNewestChests(ctx.target, count, force).thenAccept(deleted -> {
+        ctx.spillService.removeNewestChests(ctx.target, count, force).thenAccept(deleted -> {
             if (deleted == 0) {
                 ctx.sender.sendMessage(ctx.lang.get("admin.no-chests-deletable", "player", playerName));
             } else if (deleted == 1) {
@@ -222,27 +224,27 @@ public final class ChestAdminCommand {
 
         if (index != null) {
             int idx = index;
-            ctx.service.listChestsAsync(ctx.target).thenAccept(chests -> {
+            ctx.storageGateway.listChestsAsync(ctx.target).thenAccept(chests -> {
                 if (chests.stream().noneMatch(c -> c.index() == idx)) {
                     ctx.sender.sendMessage(ctx.lang.get("admin.chest-not-found",
                             "player", playerName, "index", Integer.toString(idx)));
                     return;
                 }
-                ctx.service.adminOpen(admin, ctx.target, idx);
+                ctx.chestOpener.adminOpen(admin, ctx.target, idx);
             });
             return 1;
         }
 
-        ctx.service.listChestsAsync(ctx.target).thenAccept(chests -> {
+        ctx.storageGateway.listChestsAsync(ctx.target).thenAccept(chests -> {
             if (chests.isEmpty()) {
                 ctx.sender.sendMessage(ctx.lang.get("admin.view-no-chests", "player", playerName));
                 return;
             }
             // A lone chest opens straight away unless 'list' was given; 2+ always show the picker.
             if (!forceList && chests.size() == 1) {
-                ctx.service.adminOpen(admin, ctx.target, chests.get(0).index());
+                ctx.chestOpener.adminOpen(admin, ctx.target, chests.get(0).index());
             } else {
-                ctx.service.showAdminViewList(admin, playerName, ctx.target, chests);
+                ctx.chestOpener.showAdminViewList(admin, playerName, ctx.target, chests);
             }
         });
         return 1;
@@ -250,7 +252,8 @@ public final class ChestAdminCommand {
 
     // ---- helpers ----
 
-    private record Ctx(CommandSender sender, EnderChestService service, LanguageManager lang, UUID target) {}
+    private record Ctx(CommandSender sender, ChestOpener chestOpener, ChestSpillService spillService,
+                       StorageGateway storageGateway, LanguageManager lang, UUID target) {}
 
     private static Ctx resolve(CommandSourceStack source, String playerName) {
         CommandSender sender = source.getSender();
@@ -267,7 +270,8 @@ public final class ChestAdminCommand {
             sender.sendMessage(lang.get("admin.player-not-found", "player", playerName));
             return null;
         }
-        return new Ctx(sender, plugin.getEnderChestService(), lang, target);
+        return new Ctx(sender, plugin.getChestOpener(), plugin.getSpillService(),
+                plugin.getStorageGateway(), lang, target);
     }
 
     @SuppressWarnings("deprecation")

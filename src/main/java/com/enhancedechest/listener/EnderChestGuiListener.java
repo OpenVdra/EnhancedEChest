@@ -2,9 +2,9 @@ package com.enhancedechest.listener;
 
 import com.enhancedechest.config.PluginConfig;
 import com.enhancedechest.gui.EnderChestHolder;
-import com.enhancedechest.gui.EnderChestService;
 import com.enhancedechest.lang.LanguageManager;
 import com.enhancedechest.model.ChestKind;
+import com.enhancedechest.service.ChestSessionManager;
 import com.tcoded.folialib.FoliaLib;
 import lombok.RequiredArgsConstructor;
 import net.kyori.adventure.sound.Sound;
@@ -32,7 +32,7 @@ public final class EnderChestGuiListener implements Listener {
     private static final long DENY_SOUND_COOLDOWN_MILLIS = 350L;
 
     @SuppressWarnings("unused") // kept for constructor wiring; no longer needed since detach handles animation
-    private final EnderChestService service;
+    private final ChestSessionManager sessions;
     @SuppressWarnings("unused")
     private final FoliaLib foliaLib;
     private final LanguageManager lang;
@@ -41,8 +41,8 @@ public final class EnderChestGuiListener implements Listener {
     /** Last time (ms) each player heard the deny sound; cleared on chest close. */
     private final Map<UUID, Long> lastDenySoundAt = new ConcurrentHashMap<>();
 
-    // Wiring note: 'service' and 'foliaLib' are still injected by the plugin; service is used by onClose,
-    // foliaLib is retained so the constructor signature stays stable.
+    // Wiring note: 'sessions' and 'foliaLib' are still injected by the plugin; sessions is used by
+    // onClose, foliaLib is retained so the constructor signature stays stable.
 
     /**
      * Guards item moves on an open chest GUI:
@@ -168,6 +168,6 @@ public final class EnderChestGuiListener implements Listener {
         if (!(top.getHolder() instanceof EnderChestHolder ecHolder)) return;
 
         lastDenySoundAt.remove(event.getPlayer().getUniqueId());
-        service.detach((Player) event.getPlayer(), ecHolder);
+        sessions.detach((Player) event.getPlayer(), ecHolder);
     }
 }

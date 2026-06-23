@@ -23,7 +23,7 @@ public final class EnderChestOpenCommand {
             return 0;
         }
 
-        plugin.getEnderChestService().open(player, null);
+        plugin.getChestOpener().open(player, null);
         return Command.SINGLE_SUCCESS;
     }
 
@@ -40,7 +40,7 @@ public final class EnderChestOpenCommand {
             return 0;
         }
 
-        plugin.getEnderChestService().openListDialog(player);
+        plugin.getChestOpener().openListDialog(player);
         return Command.SINGLE_SUCCESS;
     }
 
@@ -57,7 +57,7 @@ public final class EnderChestOpenCommand {
             return 0;
         }
 
-        plugin.getEnderChestService().openByQuery(player, target);
+        plugin.getChestOpener().openByQuery(player, target);
         return Command.SINGLE_SUCCESS;
     }
 }

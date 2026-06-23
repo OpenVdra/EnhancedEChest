@@ -18,9 +18,9 @@ Reads `config.yml`: language, `enderchest.default-size`, the `temp-enderchest` b
 files upgrade without manual edits. **When renaming a config/language key, add a rename rule here** rather
 than silently changing the key.
 
-Runtime-tunable values (`default-size`, temp expiry) are re-applied live on `/ee reload` via
-`EnderChestService.applyConfig` — they only affect work started after the call, so it is dupe-safe to
-reload while saves are in flight. Database-pool settings are bound at startup and require a restart
+Runtime-tunable values are re-applied live on `/ee reload`: `default-size` via
+`ChestOpener.setDefaultSize` and temp expiry via `ChestSpillService.setTempExpiry` — they only affect
+work started after the call, so it is dupe-safe to reload while saves are in flight. Database-pool settings are bound at startup and require a restart
 (a live reload warns if they changed).
 
 ## Language (`lang/LanguageManager`)

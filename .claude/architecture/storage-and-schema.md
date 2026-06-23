@@ -4,8 +4,8 @@
 
 `EnderChestStorage` models ownership as **row existence**: a player owns chest `index` iff a row exists
 for `(player_uuid, chest_index)`. There is no separate "owners" table. All methods are **synchronous**
-and thread-agnostic — `EnderChestService` is the only caller and dispatches them onto its async executor
-(see [concurrency-and-dupe-safety.md](concurrency-and-dupe-safety.md)).
+and thread-agnostic — the `com.enhancedechest.service` layer is the only caller and dispatches them onto
+the shared `DbExecutor` async pool (see [concurrency-and-dupe-safety.md](concurrency-and-dupe-safety.md)).
 
 `AbstractSqlStorage` holds all DML as plain SQL valid across SQLite, MySQL/MariaDB and PostgreSQL. Only
 `CREATE TABLE` statements are dialect-specific, injected by each subclass (`SqliteStorage`,
@@ -63,7 +63,7 @@ preceding read) are both portable upserts.
 **To add a setting:** add a component to `PlayerSettings`, a column to all three DDLs, and a mapping in
 `loadSettings`/`saveSettings`.
 
-### Write-through settings cache (`EnderChestService.settingsCache`)
+### Write-through settings cache (`PlayerSettingsCache`)
 
 Settings are read on every dialog open, so they are cached in RAM keyed by UUID. `PlayerSettingsListener`
 preloads on join and evicts on quit, so the map is **bounded by the online-player count**.

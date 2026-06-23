@@ -211,7 +211,7 @@ public final class EnhancedEchestBootstrap implements PluginBootstrap {
             return builder.buildFuture();
         }
         String prefix = builder.getRemaining().toLowerCase();
-        return plugin.getEnderChestService().listChestsAsync(player.getUniqueId())
+        return plugin.getStorageGateway().listChestsAsync(player.getUniqueId())
                 .thenApply(chests -> {
                     for (var chest : chests) {
                         String name = chest.customName();
@@ -250,7 +250,7 @@ public final class EnhancedEchestBootstrap implements PluginBootstrap {
         if (target == null) {
             return builder.buildFuture();
         }
-        return plugin.getEnderChestService().listChestsAsync(target)
+        return plugin.getStorageGateway().listChestsAsync(target)
                 .thenApply(chests -> {
                     for (var chest : chests) {
                         String name = chest.customName();

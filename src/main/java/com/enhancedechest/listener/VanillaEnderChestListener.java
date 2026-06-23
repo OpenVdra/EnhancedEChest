@@ -1,6 +1,6 @@
 package com.enhancedechest.listener;
 
-import com.enhancedechest.gui.EnderChestService;
+import com.enhancedechest.service.ChestOpener;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -14,7 +14,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 @RequiredArgsConstructor
 public final class VanillaEnderChestListener implements Listener {
 
-    private final EnderChestService service;
+    private final ChestOpener opener;
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onInteract(PlayerInteractEvent event) {
@@ -30,10 +30,10 @@ public final class VanillaEnderChestListener implements Listener {
         Player player = event.getPlayer();
         Location blockLoc = block.getLocation();
 
-        // The lid animation is driven by the inventory open/close lifecycle (see EnderChestService /
+        // The lid animation is driven by the inventory open/close lifecycle (see ChestOpener /
         // EnderChestGuiListener), not eagerly here: a single chest opens straight to its inventory,
         // whereas several chests open a dialog first — and dialogs have no close event to pair an
         // eager open() with, which would otherwise leave the lid stuck open.
-        service.open(player, blockLoc);
+        opener.open(player, blockLoc);
     }
 }

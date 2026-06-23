@@ -1,9 +1,11 @@
 package com.enhancedechest.gui.dialog;
 
-import com.enhancedechest.gui.EnderChestService;
 import com.enhancedechest.lang.LanguageManager;
 import com.enhancedechest.model.ChestKind;
 import com.enhancedechest.model.ChestSummary;
+import com.enhancedechest.service.ChestOpener;
+import com.enhancedechest.service.PlayerSettingsCache;
+import com.enhancedechest.service.StorageGateway;
 import com.enhancedechest.util.DurationFormat;
 import io.papermc.paper.dialog.Dialog;
 import io.papermc.paper.registry.data.dialog.ActionButton;
@@ -59,11 +61,16 @@ public final class ChestDialogs {
     /** Key of the list dialog's edit-mode checkbox, read at click time to route chest buttons. */
     private static final String EDIT_MODE_INPUT = "edit_mode";
 
-    private final EnderChestService service;
+    private final ChestOpener opener;
+    private final StorageGateway storageGateway;
+    private final PlayerSettingsCache settings;
     private final LanguageManager lang;
 
-    public ChestDialogs(EnderChestService service, LanguageManager lang) {
-        this.service = service;
+    public ChestDialogs(ChestOpener opener, StorageGateway storageGateway,
+                        PlayerSettingsCache settings, LanguageManager lang) {
+        this.opener = opener;
+        this.storageGateway = storageGateway;
+        this.settings = settings;
         this.lang = lang;
     }
 
@@ -114,14 +121,14 @@ public final class ChestDialogs {
                         // writes when they never touched it.
                         boolean editing = Boolean.TRUE.equals(view.getBoolean(EDIT_MODE_INPUT));
                         if (editing != editInitial) {
-                            service.setEditModeAsync(p.getUniqueId(), editing);
+                            settings.setEditModeAsync(p.getUniqueId(), editing);
                         }
                         if (editing) {
-                            service.runForPlayer(p, () -> {
+                            opener.runForPlayer(p, () -> {
                                 if (p.isOnline()) p.showDialog(detailDialog(chest, canSetMain, sourceBlock));
                             });
                         } else {
-                            service.openChest(p, index, sourceBlock);
+                            opener.openChest(p, index, sourceBlock);
                         }
                     })));
         }
@@ -136,7 +143,7 @@ public final class ChestDialogs {
                     if (!(audience instanceof Player p)) return;
                     boolean editing = Boolean.TRUE.equals(view.getBoolean(EDIT_MODE_INPUT));
                     if (editing != editInitial) {
-                        service.setEditModeAsync(p.getUniqueId(), editing);
+                        settings.setEditModeAsync(p.getUniqueId(), editing);
                     }
                 }));
 
@@ -156,7 +163,7 @@ public final class ChestDialogs {
 
     /**
      * Admin "view another player's chests" list: one button per chest that opens it <i>for the admin</i>
-     * via the shared session ({@link EnderChestService#adminOpen}). Unlike {@link #listDialog} there is
+     * via the shared session ({@link ChestOpener#adminOpen}). Unlike {@link #listDialog} there is
      * no edit-mode checkbox, rename, or set-main — an admin only views/edits chest <i>contents</i>, never
      * the owner's chest metadata. Reachable from {@code /ee view <player>} (2+ chests) and
      * {@code /ee view <player> list}.
@@ -180,7 +187,7 @@ public final class ChestDialogs {
             }
             buttons.add(ActionButton.create(label, listTooltip(chest), BUTTON_WIDTH,
                     click((view, audience) -> {
-                        if (audience instanceof Player p) service.adminOpen(p, target, index);
+                        if (audience instanceof Player p) opener.adminOpen(p, target, index);
                     })));
         }
 
@@ -221,7 +228,7 @@ public final class ChestDialogs {
         // Open first — the primary action, and the most common reason to be here.
         buttons.add(ActionButton.create(lang.getGui("dialog.open"), lang.getGui("dialog.open-desc"), BUTTON_WIDTH,
                 click((view, audience) -> {
-                    if (audience instanceof Player p) service.openChest(p, index, sourceBlock);
+                    if (audience instanceof Player p) opener.openChest(p, index, sourceBlock);
                 })));
 
         // Temp chests are transient overflow holders: no main flag, no customisation. Only Open + Back.
@@ -232,15 +239,15 @@ public final class ChestDialogs {
                 buttons.add(ActionButton.create(lang.getGui("dialog.set-main"), lang.getGui("dialog.set-main-desc"),
                         BUTTON_WIDTH, click((view, audience) -> {
                             if (!(audience instanceof Player p)) return;
-                            service.setPrimaryAsync(p.getUniqueId(), index)
-                                    .thenRun(() -> service.openDetailDialog(p, index));
+                            storageGateway.setPrimaryAsync(p.getUniqueId(), index)
+                                    .thenRun(() -> opener.openDetailDialog(p, index));
                         })));
             } else if (canSetMain && chest.primary()) {
                 buttons.add(ActionButton.create(lang.getGui("dialog.unset-main"), lang.getGui("dialog.unset-main-desc"),
                         BUTTON_WIDTH, click((view, audience) -> {
                             if (!(audience instanceof Player p)) return;
-                            service.clearPrimaryAsync(p.getUniqueId())
-                                    .thenRun(() -> service.openDetailDialog(p, index));
+                            storageGateway.clearPrimaryAsync(p.getUniqueId())
+                                    .thenRun(() -> opener.openDetailDialog(p, index));
                         })));
             }
 
@@ -256,7 +263,7 @@ public final class ChestDialogs {
         // Back returns to the list in edit mode — the detail dialog is only reachable from there.
         buttons.add(ActionButton.create(lang.getGui("dialog.back"), null, BUTTON_WIDTH,
                 click((view, audience) -> {
-                    if (audience instanceof Player p) service.openListDialog(p, true, sourceBlock);
+                    if (audience instanceof Player p) opener.openListDialog(p, true, sourceBlock);
                 })));
 
         Component title = withIcon(chest, lang.getChestLabel(index, chest.customName(), chest.kind()));
@@ -292,7 +299,7 @@ public final class ChestDialogs {
                     if (!(audience instanceof Player p)) return;
                     String typed = view.getText(ICON_SEARCH_INPUT);
                     String query = typed == null ? "" : typed.trim();
-                    service.runForPlayer(p, () -> {
+                    opener.runForPlayer(p, () -> {
                         if (p.isOnline()) p.showDialog(iconPickerDialog(chest, query));
                     });
                 })));
@@ -300,8 +307,8 @@ public final class ChestDialogs {
         buttons.add(ActionButton.create(lang.getGui("dialog.icon-default"), lang.getGui("dialog.icon-default-desc"),
                 ICON_BUTTON_WIDTH, click((view, audience) -> {
                     if (!(audience instanceof Player p)) return;
-                    service.setIconAsync(p.getUniqueId(), index, null)
-                            .thenRun(() -> service.openDetailDialog(p, index));
+                    storageGateway.setIconAsync(p.getUniqueId(), index, null)
+                            .thenRun(() -> opener.openDetailDialog(p, index));
                 })));
 
         // One button per matching icon; the client scrolls the grid.
@@ -311,8 +318,8 @@ public final class ChestDialogs {
             buttons.add(ActionButton.create(label, null, ICON_BUTTON_WIDTH,
                     click((view, audience) -> {
                         if (!(audience instanceof Player p)) return;
-                        service.setIconAsync(p.getUniqueId(), index, entry.key())
-                                .thenRun(() -> service.openDetailDialog(p, index));
+                        storageGateway.setIconAsync(p.getUniqueId(), index, entry.key())
+                                .thenRun(() -> opener.openDetailDialog(p, index));
                     })));
         }
 
@@ -325,7 +332,7 @@ public final class ChestDialogs {
 
         ActionButton back = ActionButton.create(lang.getGui("dialog.back"), null, ICON_BUTTON_WIDTH,
                 click((view, audience) -> {
-                    if (audience instanceof Player p) service.openDetailDialog(p, index);
+                    if (audience instanceof Player p) opener.openDetailDialog(p, index);
                 }));
 
         Component title = lang.getGui("dialog.icon-title");
@@ -361,13 +368,13 @@ public final class ChestDialogs {
                     if (!(audience instanceof Player p)) return;
                     String typed = view.getText("name");
                     String name = (typed == null || typed.isBlank()) ? null : typed.trim();
-                    service.renameAsync(p.getUniqueId(), index, name)
-                            .thenRun(() -> service.openDetailDialog(p, index));
+                    storageGateway.renameAsync(p.getUniqueId(), index, name)
+                            .thenRun(() -> opener.openDetailDialog(p, index));
                 }));
 
         ActionButton cancel = ActionButton.create(lang.getGui("dialog.cancel"), null, BUTTON_WIDTH,
                 click((view, audience) -> {
-                    if (audience instanceof Player p) service.openDetailDialog(p, index);
+                    if (audience instanceof Player p) opener.openDetailDialog(p, index);
                 }));
 
         Component title = lang.getChestLabel(index, chest.customName(), chest.kind());

@@ -10,8 +10,9 @@ import java.util.UUID;
 
 /**
  * All methods execute synchronously on the calling thread.
- * No background threads, no queued writes — callers (EnderChestService) are responsible
- * for dispatching these onto an async executor and never blocking a region/main thread.
+ * No background threads, no queued writes — callers (the {@code com.enhancedechest.service} layer,
+ * via {@code DbExecutor}) are responsible for dispatching these onto an async executor and never
+ * blocking a region/main thread.
  *
  * <p>Ownership model: a player owns a chest iff a row exists for (player_uuid, chest_index).
  * Chests are created explicitly (admin command, API, or the auto-bootstrap of the first chest).
