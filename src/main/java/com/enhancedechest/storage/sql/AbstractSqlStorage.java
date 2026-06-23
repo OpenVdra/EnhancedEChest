@@ -28,9 +28,10 @@ public abstract class AbstractSqlStorage implements EnderChestStorage {
             "WHERE player_uuid = ? ORDER BY chest_index";
 
     // is_primary DESC puts the flagged chest first; otherwise the lowest index wins.
-    // Temp chests (kind != 0) are never primary and must be excluded from /ec resolution.
+    // Only TEMP chests (kind = 1) are excluded — both NORMAL and PERM chests can be opened by /ec and
+    // set as the main, so the filter is "anything but TEMP" rather than "NORMAL only".
     private static final String SQL_PRIMARY =
-            "SELECT chest_index FROM enderchests WHERE player_uuid = ? AND kind = 0 " +
+            "SELECT chest_index FROM enderchests WHERE player_uuid = ? AND kind <> 1 " +
             "ORDER BY is_primary DESC, chest_index ASC LIMIT 1";
 
     private static final String SQL_LOAD =
@@ -240,6 +241,28 @@ public abstract class AbstractSqlStorage implements EnderChestStorage {
             }
         } catch (SQLException e) {
             throw new RuntimeException("Failed to create chest for " + owner, e);
+        }
+    }
+
+    @Override
+    public int createPermChest(UUID owner, int size) {
+        try (Connection conn = dataSource.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                // Index is max+1 over ALL rows (temp/perm included) to avoid a PK collision. PERM chests
+                // carry no expiry and are never auto-flagged primary (set only via setPrimary).
+                int newIndex = queryInt(conn, SQL_MAX_INDEX, owner.toString()) + 1;
+                insertChest(conn, owner, newIndex, size, false, ChestKind.PERM, null);
+                conn.commit();
+                return newIndex;
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to create perm chest for " + owner, e);
         }
     }
 

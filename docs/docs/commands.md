@@ -48,11 +48,11 @@ Give a player a new chest. <code>&lt;size&gt;</code> is the slot count — a mul
 </CommandRow>
 
 <CommandRow :commands="['/ee resize &lt;player&gt; &lt;index&gt; &lt;size&gt;']" permission="enhancedechest.admin.resize">
-Change the slot count of an existing chest. Growing, or shrinking with no items in the cut-off slots, is a plain resize. Shrinking below occupied slots <strong>spills</strong> the overflow items into a temporary chest rather than destroying them.
+Change the slot count of an existing chest. Growing, or shrinking with no items in the cut-off slots, is a plain resize. Shrinking below occupied slots <strong>spills</strong> the overflow items into a temporary chest rather than destroying them. <strong>Permission-granted</strong> chests cannot be resized this way — their size is fixed by the granting permission.
 </CommandRow>
 
 <CommandRow :commands="['/ee delete &lt;player&gt; &lt;count&gt; [force]']" permission="enhancedechest.admin.delete">
-Delete the <code>&lt;count&gt;</code> <strong>newest</strong> chests (the highest indices) a player owns. By default any items they hold are <strong>spilled</strong> into a temporary chest so nothing is lost; add the literal <code>force</code> to <strong>hard-delete</strong> them, discarding their contents immediately. The player's <strong>first chest</strong> (lowest index) is always kept, so this can never leave them with no chest — if only the first chest remains, nothing is deleted. If you delete a player's main chest, they simply have no main until they pick a new one.
+Delete the <code>&lt;count&gt;</code> <strong>newest</strong> chests (the highest indices) a player owns. By default any items they hold are <strong>spilled</strong> into a temporary chest so nothing is lost; add the literal <code>force</code> to <strong>hard-delete</strong> them, discarding their contents immediately. The player's <strong>first chest</strong> (lowest index) is always kept, so this can never leave them with no chest — if only the first chest remains, nothing is deleted. <strong>Permission-granted</strong> chests are skipped entirely. If you delete a player's main chest, they simply have no main until they pick a new one.
 </CommandRow>
 
 <CommandRow :commands="['/ee view &lt;player&gt; [list | index]']" permission="enhancedechest.admin.view">

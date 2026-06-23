@@ -54,6 +54,10 @@ Each chest can be given a custom name. Named chests show that name as their inve
 Admins can add, resize, and delete chests for any player with <code>/ee add</code>, <code>/ee resize</code>, and <code>/ee delete</code>. Deleting the main chest leaves the player with no main until they pick a new one from the menu.
 </FeatureCard>
 
+<FeatureCard icon="🎫" title="Permission-Granted Chests">
+Hand out chests by rank instead of by command. The permission <code>enhancedechest.additional_amount.&lt;count&gt;.slot.&lt;size&gt;</code> grants that many chests at that size — e.g. <code>...2.slot.54</code> gives two 54-slot chests. Matching nodes <strong>stack</strong>, grants sync on open, and removing a node removes those chests (spilling any items to a recoverable temporary chest). The player's base chest is always protected. See the <a href="/docs/permissions#permission-granted-chests">Permissions</a> page.
+</FeatureCard>
+
 <FeatureCard icon="👁️" title="View Other Players' Chests">
 With <code>/ee view &lt;player&gt;</code> an admin can open any player's chest — online or offline. One chest opens directly; with several, a <strong>picker menu</strong> lets you choose (or use <code>/ee view &lt;player&gt; list</code> to always show it, or <code>&lt;index&gt;</code> for a specific chest). Grant <code>admin.view</code> for a read-only look, or add <code>admin.edit</code> to take and add items. The admin joins the <strong>same live inventory</strong> the owner sees, so contents can never be duplicated (on Paper both can even edit at once).
 </FeatureCard>

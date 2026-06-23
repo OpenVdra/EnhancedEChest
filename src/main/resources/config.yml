@@ -8,6 +8,16 @@ enderchest:
   # Must be a multiple of 9, between 9 and 54. Invalid values are rounded to the nearest valid size.
   default-size: 54
 
+permission-chests:
+  # Grant ender chests from permissions of the form:
+  #   enhancedechest.additional_amount.<count>.slot.<size>
+  #   e.g. enhancedechest.additional_amount.2.slot.54  -> two 54-slot chests.
+  # Matching permissions STACK (summed per size). Losing a permission removes exactly that many
+  # chests of that size; any items they held spill into a temporary chest (recoverable in /eclist).
+  # Synced every time the player opens their ender chest. Players always keep at least one regular
+  # (base) chest — permissions never create, delete or override it.
+  enabled: true
+
 temp-enderchest:
   # When a chest is shrunk, deleted (without 'force'), or expires with items still inside, those
   # items are moved into a temporary ender chest that disappears once emptied or once it expires.

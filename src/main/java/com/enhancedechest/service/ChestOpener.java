@@ -47,6 +47,7 @@ public final class ChestOpener {
     private final FoliaLib foliaLib;
     private final Logger logger;
     private final ChestDialogs dialogs;
+    private final PermissionChestService permService;
 
     // Runtime-tunable via /ee reload (see setDefaultSize). volatile so the value written on the main
     // thread during a reload is visible to the async open threads that read it when bootstrapping.
@@ -55,7 +56,8 @@ public final class ChestOpener {
 
     public ChestOpener(ChestSessionManager sessions, StorageGateway storageGateway,
                        PlayerSettingsCache settings, EnderChestStorage storage, DbExecutor db,
-                       LanguageManager lang, FoliaLib foliaLib, Logger logger, int defaultSize) {
+                       LanguageManager lang, FoliaLib foliaLib, Logger logger, int defaultSize,
+                       PermissionChestService permService) {
         this.sessions       = sessions;
         this.storageGateway = storageGateway;
         this.settings       = settings;
@@ -65,6 +67,7 @@ public final class ChestOpener {
         this.foliaLib       = foliaLib;
         this.logger         = logger;
         this.defaultSize    = defaultSize;
+        this.permService    = permService;
         this.dialogs        = new ChestDialogs(this, storageGateway, settings, lang);
     }
 
@@ -103,13 +106,18 @@ public final class ChestOpener {
         boolean canSetMain = canSetMain(player);
         foliaLib.getScheduler().runAtEntity(player, outerTask -> {
             closeExistingGui(player);
+            // Reconcile permission-granted chests against the player's permissions before routing, reusing
+            // the list /ec already fetches (no extra query in the common case where nothing changed).
+            java.util.Map<Integer, Integer> target = permService.resolveDesired(player);
             storageGateway.listChestsAsync(uuid)
+                    .thenCompose(c -> permService.reconcile(uuid, target, c))
                     .thenAccept(chests -> {
                         // Spilled items live in TEMP chests that can ONLY be retrieved from the list
                         // dialog, so any temp chest forces the dialog regardless of how many normal
                         // chests exist (otherwise a single-chest player could never reach the overflow).
                         boolean hasTemp = chests.stream().anyMatch(c -> c.kind() == ChestKind.TEMP);
-                        long normalCount = chests.stream().filter(c -> c.kind() == ChestKind.NORMAL).count();
+                        // PERM chests behave exactly like NORMAL ones for routing — count both as "real".
+                        long normalCount = chests.stream().filter(c -> c.kind() != ChestKind.TEMP).count();
                         // 0 or 1 normal chest and nothing spilled: open it directly (bootstrapping
                         // chest #1 if the player owns none).
                         if (!hasTemp && normalCount <= 1) {
@@ -252,16 +260,23 @@ public final class ChestOpener {
     public void openListDialog(Player player, boolean editInitial, @Nullable Location sourceBlock) {
         UUID uuid = player.getUniqueId();
         boolean canSetMain = canSetMain(player);
-        storageGateway.listChestsAsync(uuid).thenAccept(chests ->
-                foliaLib.getScheduler().runAtEntity(player, task -> {
-                    if (!player.isOnline()) return;
-                    if (chests.isEmpty()) {
-                        player.sendMessage(lang.get("chest.none"));
-                        return;
-                    }
-                    player.showDialog(dialogs.listDialog(chests, canSetMain, sourceBlock, editInitial));
-                })
-        ).exceptionally(e -> reportOpenFailure(player, e));
+        // Reconcile permission-granted chests before building the list, so /eclist reflects the current
+        // grants. resolveDesired must read permissions on the entity thread.
+        foliaLib.getScheduler().runAtEntity(player, outerTask -> {
+            java.util.Map<Integer, Integer> target = permService.resolveDesired(player);
+            storageGateway.listChestsAsync(uuid)
+                    .thenCompose(c -> permService.reconcile(uuid, target, c))
+                    .thenAccept(chests ->
+                            foliaLib.getScheduler().runAtEntity(player, task -> {
+                                if (!player.isOnline()) return;
+                                if (chests.isEmpty()) {
+                                    player.sendMessage(lang.get("chest.none"));
+                                    return;
+                                }
+                                player.showDialog(dialogs.listDialog(chests, canSetMain, sourceBlock, editInitial));
+                            }))
+                    .exceptionally(e -> reportOpenFailure(player, e));
+        });
     }
 
     /**

@@ -16,6 +16,9 @@ public final class PluginConfig {
     // Ender chest
     private int defaultSize;
 
+    // Permission-granted chests (enhancedechest.additional_amount.<count>.slot.<size>)
+    private boolean permissionChestsEnabled;
+
     // Temporary chests (overflow on shrink/delete/expire)
     private long tempExpiryMillis;
     private long expiryCheckIntervalMillis;
@@ -48,6 +51,8 @@ public final class PluginConfig {
         locale = config.getString("language", "en_US");
 
         defaultSize = sanitizeSize(config.getInt("enderchest.default-size", 54));
+
+        permissionChestsEnabled = config.getBoolean("permission-chests.enabled", true);
 
         tempExpiryMillis          = parseDuration(config.getString("temp-enderchest.expiry", "24h"), "24h");
         expiryCheckIntervalMillis = parseDuration(config.getString("temp-enderchest.check-interval", "5m"), "5m");

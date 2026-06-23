@@ -63,6 +63,15 @@ public interface EnderChestStorage {
     int createChest(UUID owner, int size, @Nullable Long expiresAt);
 
     /**
+     * Creates a permission-granted chest (kind=PERM) with the next free index. PERM chests carry no
+     * expiry and are never auto-flagged primary; they are granted/removed by the reconcile of
+     * {@code com.enhancedechest.service.PermissionChestService} and are invisible to admin commands.
+     *
+     * @return the index assigned to the new chest
+     */
+    int createPermChest(UUID owner, int size);
+
+    /**
      * Shrinks a chest and spills any cut-off items into a new temp chest, in one transaction.
      * The original row is updated to {@code newSize} with {@code visible} as its new contents; if
      * {@code overflow} is non-null a temp chest (kind=TEMP, next free index, expiring at

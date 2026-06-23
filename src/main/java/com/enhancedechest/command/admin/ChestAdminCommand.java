@@ -137,8 +137,15 @@ public final class ChestAdminCommand {
         }
 
         ctx.storageGateway.listChestsAsync(ctx.target).thenAccept(chests -> {
-            if (chests.stream().noneMatch(c -> c.index() == index)) {
+            var target = chests.stream().filter(c -> c.index() == index).findFirst().orElse(null);
+            if (target == null) {
                 ctx.sender.sendMessage(ctx.lang.get("admin.chest-not-found",
+                        "player", playerName, "index", Integer.toString(index)));
+                return;
+            }
+            // Permission-granted chests are managed by permissions, not admin commands — leave them alone.
+            if (target.kind() == com.enhancedechest.model.ChestKind.PERM) {
+                ctx.sender.sendMessage(ctx.lang.get("admin.cannot-modify-perm",
                         "player", playerName, "index", Integer.toString(index)));
                 return;
             }

@@ -29,11 +29,12 @@ configurable otherwise). `StorageFactory` picks the backend from `config.type`.
 | `container_data` | nullable serialized bytes (`ContainerCodec`) |
 | `migrated` | flag, meaningful on chest #1 only |
 | `last_updated` | write timestamp |
-| `kind` | `0` = NORMAL, `1` = TEMP (overflow) — see [expiry-and-temp-chests.md](expiry-and-temp-chests.md) |
+| `kind` | `0` = NORMAL, `1` = TEMP (overflow), `2` = PERM (permission-granted) — see [expiry-and-temp-chests.md](expiry-and-temp-chests.md) and [commands-and-permissions.md](commands-and-permissions.md#permission-granted-chests) |
 | `expires_at` | nullable epoch-ms expiry; `NULL` = never. Indexed (`idx_enderchests_expires`) |
 | `icon` | nullable material key (e.g. `minecraft:diamond`) of the list icon; `NULL` = default. Rendered as an Adventure sprite component in the dialogs |
 
-Key operations: `createChest` (next index, **never** auto-primary; optional `expiresAt`), `ensureChest`
+Key operations: `createChest` (next index, **never** auto-primary; optional `expiresAt`), `createPermChest`
+(next index, `kind = PERM`, no expiry, never auto-primary — used by the permission reconcile), `ensureChest`
 (create at a fixed index if absent — migration only, also never auto-primary), `resizeChest`,
 `deleteChest` (**no survivor promotion** — if the deleted chest was the main, the player simply has no
 main until they pick one), `renameChest`, `setIcon`, `setPrimary` (clear-then-set in a transaction — the
@@ -41,9 +42,10 @@ only way a chest becomes primary), `clearPrimary`, `isMigrated`/`setMigrated`, t
 `spillShrink` / `spillRemove`, and the sweeper query `findExpired`. `saveChest` is **UPDATE-only** and
 never touches size, name, or primary.
 
-Primary resolution (`SQL_PRIMARY`) filters `kind = 0` and orders `is_primary DESC, chest_index ASC`, so
-it returns the flagged main when one exists and otherwise the lowest-indexed NORMAL chest; temp chests
-are never primary.
+Primary resolution (`SQL_PRIMARY`) filters `kind <> 1` (everything **except** TEMP) and orders
+`is_primary DESC, chest_index ASC`, so it returns the flagged main when one exists and otherwise the
+lowest-indexed non-temp chest. Both NORMAL and PERM chests are eligible to be opened by `/ec` and set as
+the main; only temp chests are excluded.
 
 ## Schema: `player_settings`
 

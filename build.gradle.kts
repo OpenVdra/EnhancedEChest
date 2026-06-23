@@ -94,5 +94,8 @@ tasks.processResources {
 }
 
 tasks.runServer {
+    downloadPlugins {
+        modrinth("luckperms", "v5.5.53-bukkit")
+    }
     minecraftVersion("26.1.2")
 }

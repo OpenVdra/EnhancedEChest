@@ -38,6 +38,18 @@ Slot count of the chest that is auto-created the first time a player ever opens 
 
 </ConfigGroup>
 
+<ConfigGroup name="permission-chests">
+<template #info>
+Controls ender chests granted automatically from permissions. See the Permissions page for the node format and behavior.
+</template>
+
+<ConfigProperty name="enabled" value="true" type="boolean">
+When <code>true</code>, players are granted ender chests from <code>enhancedechest.additional_amount.&lt;count&gt;.slot.&lt;size&gt;</code> permissions (e.g. <code>enhancedechest.additional_amount.2.slot.54</code> → two 54-slot chests). Matching nodes <strong>stack</strong>. Grants are synced each time a player opens their ender chest; losing a node removes those chests, spilling any items into a recoverable temporary chest. Players always keep their base chest. Setting this to <code>false</code> stops syncing but leaves already-granted chests in place.<br><br>
+See the <a href="/docs/permissions#permission-granted-chests">Permissions</a> page for full details.
+</ConfigProperty>
+
+</ConfigGroup>
+
 <ConfigGroup name="database">
 <template #info>
 Configures where ender chest contents are stored. SQLite works out of the box with no setup. See the Database page for MySQL, MariaDB, and PostgreSQL setup.
@@ -102,6 +114,14 @@ enderchest:
   # Slot count of the chest auto-created the first time a player opens their ender chest.
   # Must be a multiple of 9, between 9 and 54. Invalid values are rounded.
   default-size: 54
+
+permission-chests:
+  # Grant ender chests from permissions of the form:
+  #   enhancedechest.additional_amount.<count>.slot.<size>
+  #   e.g. enhancedechest.additional_amount.2.slot.54  -> two 54-slot chests.
+  # Matching permissions STACK (summed per size). Losing a permission removes those chests,
+  # spilling any items into a temporary chest. Players always keep their base chest.
+  enabled: true
 
 database:
   # Storage backend: sqlite | mysql | mariadb | postgres

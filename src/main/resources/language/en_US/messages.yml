@@ -36,6 +36,8 @@ admin:
   invalid-size: '{prefix}&fSize must be a multiple of 9 between 9 and 54.'
   invalid-duration: '{prefix}&fInvalid duration "{duration}". Use a value like 20s, 5m, 1h, 7d, or 1d_2h_30m.'
   chest-not-found: '{prefix}&f{player} has no ender chest with index {index}.'
+  # /ee resize on a permission-granted chest — those are managed by permissions, not admin commands.
+  cannot-modify-perm: '{prefix}&fEnder chest {index} of {player} is granted by a permission and cannot be modified.'
   # /ee view <player> — the target owns no chests yet, so there is nothing to open.
   view-no-chests: '{prefix}&f{player} does not have any ender chests yet.'
   chest-added: '{prefix}&fAdded ender chest {index} with {size} slots to {player}.'

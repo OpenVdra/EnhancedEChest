@@ -19,18 +19,23 @@ item-moving ops, and all async storage work is dispatched through the shared `Db
 
 ## Open routing (`/ec`, right-click) — `ChestOpener.open(player, sourceBlock)`
 
-Lists the player's chests and decides what to show (unchanged by the shared-session work):
+First **reconciles permission-granted chests** (see [commands-and-permissions.md](commands-and-permissions.md#permission-granted-chests)):
+on the entity thread it computes the player's permission target, then `listChestsAsync().thenCompose(reconcile)`
+so the chest list it routes on is already in sync (common case: nothing changed → no extra query). Then it
+decides what to show:
 
-- **0 or 1 normal chest, no temp chest** → open it directly (bootstrapping chest #1 via `createChest`
+- **0 or 1 real chest, no temp chest** → open it directly (bootstrapping chest #1 via `createChest`
   if the player owns none).
 - **2+ chests, an explicit main flagged *and* caller has `enhancedechest.command.open`** → open the
   flagged main directly.
 - **2+ chests otherwise** (no main chosen, or no permission), or **any TEMP chest present** → show the
   `/eclist` management dialog.
 
-A main is **never** auto-assigned (`is_primary = 0` on insert; deletes don't promote a survivor). The
-list marks the main with a gold `★`. See [ui-dialogs.md](ui-dialogs.md) and
-[storage-and-schema.md](storage-and-schema.md) for the primary-resolution details.
+"Real chest" counts **both NORMAL and PERM** (`kind != TEMP`): a PERM chest behaves exactly like a NORMAL
+one for routing and can itself be the flagged main. A main is **never** auto-assigned (`is_primary = 0` on
+insert; deletes don't promote a survivor). The list marks the main with a gold `★`. See
+[ui-dialogs.md](ui-dialogs.md) and [storage-and-schema.md](storage-and-schema.md) for the
+primary-resolution details.
 
 ## The shared live-inventory registry
 

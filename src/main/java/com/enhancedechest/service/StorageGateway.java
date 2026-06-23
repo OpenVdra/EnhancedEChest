@@ -33,6 +33,11 @@ public final class StorageGateway {
         return db.supply(() -> storage.createChest(owner, size, expiresAt));
     }
 
+    /** Creates a permission-granted chest (kind=PERM); used by the permission-chest reconcile. */
+    public CompletableFuture<Integer> createPermChestAsync(UUID owner, int size) {
+        return db.supply(() -> storage.createPermChest(owner, size));
+    }
+
     public CompletableFuture<Void> renameAsync(UUID owner, int index, @Nullable String name) {
         return db.run(() -> storage.renameChest(owner, index, name));
     }

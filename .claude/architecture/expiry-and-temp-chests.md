@@ -18,7 +18,9 @@ being lost silently.
 A FoliaLib async repeating timer at `temp-enderchest.check-interval` (default `5m`). Each tick runs
 `findExpired(now)` (one indexed query on a column that is `NULL` for almost every row) and routes each
 hit through the service — NORMAL → `removeChest(..., force=false)` (spill), TEMP →
-`removeChest(..., force=true)` (discard). Expiry is deliberately **swept, not lazy on access**, so the hot
+`removeChest(..., force=true)` (discard). PERM chests carry no `expires_at`, so they never appear in
+`findExpired` and are never swept (they are managed by the permission reconcile instead). Expiry is
+deliberately **swept, not lazy on access**, so the hot
 open/close path stays free of expiry filtering and the dangerous mutation is centralised in one
 serialized place.
 

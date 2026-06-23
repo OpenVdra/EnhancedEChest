@@ -60,10 +60,21 @@ For the full design, read [ARCHITECTURE.md](ARCHITECTURE.md). For user-facing do
   - **2+ chests otherwise** (no main set, or no permission) → management dialog.
   The main chest is **never auto-assigned**: `createChest`/`ensureChest` insert with `is_primary = 0` and
   deletes do not promote a survivor — it is set only by the dialog's "Set as main" (`setPrimary`). So
-  `is_primary` is zero-or-one per player; `getPrimaryIndex`/`SQL_PRIMARY` falls back to the lowest NORMAL
-  index when none is flagged (keeps single-chest `/ec` working). The list marks the main chest with a
-  gold `★` appended to its label (`gui.yml dialog.main-tag`); dialog buttons themselves are plain text.
-  Don't reintroduce auto-primary — it breaks the "user explicitly chooses their main" model.
+  `is_primary` is zero-or-one per player; `getPrimaryIndex`/`SQL_PRIMARY` filters `kind <> 1` (non-TEMP)
+  and falls back to the lowest such index when none is flagged (keeps single-chest `/ec` working — and
+  lets a PERM chest be opened/set as main). "Real chest" counting in the router is `kind != TEMP` (NORMAL
+  **and** PERM). The list marks the main chest with a gold `★` appended to its label (`gui.yml
+  dialog.main-tag`); dialog buttons themselves are plain text. Don't reintroduce auto-primary — it breaks
+  the "user explicitly chooses their main" model.
+- **Permission-granted chests** (`ChestKind.PERM`, `kind = 2`): players are granted chests from
+  `enhancedechest.additional_amount.<count>.slot.<size>` permissions (stacking, summed per size), gated by
+  `permission-chests.enabled`. `PermissionChestService.reconcile` runs **on open** (via `ChestOpener`,
+  reusing the already-fetched list) to grant/resize/revoke PERM chests against the player's permissions;
+  revoked chests spill items to a temp chest. The base NORMAL chest is inviolable (reconcile bootstraps it
+  first; never deleted/overridden). To players a PERM chest behaves **exactly** like NORMAL (no tag, no
+  hidden buttons); admin commands skip it (`/ee resize` → `admin.cannot-modify-perm`, `/ee delete` is
+  NORMAL-only). Reuses the existing `kind` column — no schema change. See
+  [architecture/commands-and-permissions.md](architecture/commands-and-permissions.md#permission-granted-chests).
 
 ## Docs site
 
