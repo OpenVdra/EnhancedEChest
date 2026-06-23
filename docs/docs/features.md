@@ -37,12 +37,7 @@ The default size for a player's first chest is set with <code>enderchest.default
 
 </CardGrid>
 
-<!-- TODO(showcase): replace this box with a screenshot of a 54-slot ender chest GUI. -->
-<div class="showcase-placeholder">
-  <span class="sp-icon">📦</span>
-  <span class="sp-title">Showcase: a 54-slot ender chest</span>
-  <span class="sp-hint">Drop a screenshot of the enlarged chest inventory here.</span>
-</div>
+<img width="530" height="667" alt="54slots-enderchest" src="https://github.com/user-attachments/assets/a1f8a60e-5f31-4a30-b91b-07c5ba9243bf" />
 
 ---
 
