@@ -6,7 +6,7 @@ All player-facing text in EnhancedEchest lives in editable language files, so yo
 plugins/EnhancedEchest/language/<locale>/
 ```
 
-The active locale is set by the `language` option in [`config.yml`](/docs/configuration) (default: `en_US`). The plugin ships with the `en_US` (English) locale.
+The active locale is set by the `language` option in [`config.yml`](/docs/configuration) (default: `en_US`). The plugin ships with the `en_US` (English) and `vi_VN` (Tiếng Việt) locales.
 
 ## Files
 

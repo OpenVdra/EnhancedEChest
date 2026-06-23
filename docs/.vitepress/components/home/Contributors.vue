@@ -65,7 +65,6 @@ onMounted(async () => {
 
 <style scoped>
 .contributors-section {
-  border-top: 1px solid var(--vp-c-border);
   padding: 64px 24px 80px;
 }
 

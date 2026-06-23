@@ -4,7 +4,7 @@
 
 # EnhancedEchest
 
-A Paper plugin that gives every player bigger ender chests of up to 54 slots, with multiple named chests managed from a clean in-game menu. Fast, lightweight, and high performance.
+Give players multiple ender chests with up to 54 slots each, custom names, and icons, all from one clean in-game menu.
 
 [![Modrinth](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/compact/available/modrinth_vector.svg)](https://modrinth.com/plugin/enhancedechest)
 [![GitHub](https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/compact/available/github_vector.svg)](https://github.com/OpenVdra/EnhancedEchest)

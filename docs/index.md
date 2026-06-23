@@ -3,8 +3,8 @@ layout: home
 
 hero:
   name: "EnhancedEchest"
-  text: "Bigger Ender Chests, Saved Forever"
-  tagline: Give every player larger, multi-chest ender storage backed by a real database. Zero duplication, zero data loss.
+  text: "Ender Chests, Upgraded"
+  tagline: Give players multiple ender chests with up to 54 slots each, custom names, and icons, all from one clean in-game menu.
   image:
     src: /hero.webp
     alt: EnhancedEchest

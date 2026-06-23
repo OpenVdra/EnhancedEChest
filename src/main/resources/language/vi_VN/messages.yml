@@ -1,0 +1,58 @@
+# ============================================================================
+#  Tin nhắn chat cho EnhancedEchest
+#  {prefix} được thay bằng giá trị bên dưới. Phần lớn là chữ trắng;
+#  chỉ các giá trị động được chèn vào để câu đọc liền mạch.
+#  Dòng chứa '<' sẽ được phân tích theo MiniMessage, ngược lại dùng mã '&' cũ.
+# ============================================================================
+
+prefix: '&#9B59B6EnhancedEchest &8⏩ &r'
+
+command:
+  not-player: '{prefix}&fChỉ người chơi mới có thể dùng rương ẩn.'
+
+chest:
+  load-failed: '{prefix}&fKhông thể tải rương ẩn của bạn. Vui lòng liên hệ quản trị viên.'
+  codec-failed: '{prefix}&fKhông thể đọc dữ liệu rương ẩn của bạn. Vui lòng liên hệ quản trị viên.'
+  not-found: '{prefix}&fRương ẩn đó không còn tồn tại.'
+  unknown: '{prefix}&fKhông có rương ẩn nào khớp với "{query}".'
+  none: '{prefix}&fBạn chưa có rương ẩn nào.'
+  # Hiện (trên action bar) khi người chơi cố bỏ vật phẩm vào rương tạm.
+  temp-take-only: '&cĐây là rương tạm. Bạn chỉ có thể lấy vật phẩm ra, không thể bỏ vào.'
+  # Hiện cho quản trị viên khi mở rương đang được dùng (Folia chỉ cho một người xem mỗi rương).
+  in-use: '{prefix}&fRương ẩn đó đang được sử dụng. Vui lòng thử lại sau giây lát.'
+  # Action bar hiện cho quản trị viên chỉ được xem mà không được sửa rương người khác (không có quyền sửa).
+  view-only: '&7Chỉ xem — bạn có thể xem rương này nhưng không thể thay đổi nội dung.'
+
+migrate:
+  no-players: '{prefix}&fKhông có người chơi nào trực tuyến.'
+  complete: '{prefix}&fChuyển dữ liệu hoàn tất. {migrated} đã chuyển, {skipped} đã có từ trước.'
+  player-offline: '{prefix}&f{player} không trực tuyến.'
+  success: '{prefix}&fĐã chuyển dữ liệu cho {player} thành công.'
+  already-done: '{prefix}&f{player} đã được chuyển dữ liệu từ trước.'
+
+admin:
+  reload-success: '{prefix}&fĐã tải lại cấu hình.'
+  player-not-found: '{prefix}&fKhông tìm thấy người chơi {player}.'
+  invalid-size: '{prefix}&fKích thước phải là bội số của 9 trong khoảng 9 đến 54.'
+  invalid-duration: '{prefix}&fThời lượng "{duration}" không hợp lệ. Hãy dùng dạng như 20s, 5m, 1h, 7d, hoặc 1d_2h_30m.'
+  chest-not-found: '{prefix}&f{player} không có rương ẩn nào với số thứ tự {index}.'
+  # /ee resize trên rương cấp theo quyền — chúng được quản lý bởi quyền, không phải lệnh quản trị.
+  cannot-modify-perm: '{prefix}&fRương ẩn {index} của {player} được cấp bởi một quyền và không thể chỉnh sửa.'
+  # /ee view <player> — người được xem chưa có rương nào nên không có gì để mở.
+  view-no-chests: '{prefix}&f{player} chưa có rương ẩn nào.'
+  chest-added: '{prefix}&fĐã thêm rương ẩn {index} với {size} ô cho {player}.'
+  chest-added-expiring: '{prefix}&fĐã thêm rương ẩn {index} với {size} ô cho {player}. Rương sẽ hết hạn sau {duration}.'
+  chests-added: '{prefix}&fĐã thêm {count} rương ẩn ({range}) với {size} ô cho {player}.'
+  chests-added-expiring: '{prefix}&fĐã thêm {count} rương ẩn ({range}) với {size} ô cho {player}. Chúng sẽ hết hạn sau {duration}.'
+  chest-resized: '{prefix}&fĐã đổi kích thước rương ẩn {index} của {player} thành {size} ô.'
+  # /ee delete <player> <count> [force] — xóa các rương mới nhất; rương đầu tiên luôn được giữ lại.
+  no-chests-deletable: '{prefix}&f{player} chỉ có rương ẩn đầu tiên, không thể xóa được.'
+  chest-deleted-newest: '{prefix}&fĐã xóa rương ẩn mới nhất của {player}. Vật phẩm trong rương đã bị bỏ đi.'
+  chest-deleted-newest-spilled: '{prefix}&fĐã xóa rương ẩn mới nhất của {player}. Vật phẩm trong rương đã được chuyển sang một rương tạm.'
+  chests-deleted-newest: '{prefix}&fĐã xóa {count} rương ẩn mới nhất của {player}. Vật phẩm trong chúng đã bị bỏ đi.'
+  chests-deleted-newest-spilled: '{prefix}&fĐã xóa {count} rương ẩn mới nhất của {player}. Vật phẩm trong chúng đã được chuyển sang các rương tạm.'
+
+update:
+  available: '{prefix}&fĐã có bản cập nhật mới. Bạn đang dùng {current}, bản mới nhất là {latest}.'
+  # Giữ ở dạng MiniMessage để URL tải về vẫn bấm được (mã '&' cũ không tạo được sự kiện bấm).
+  download: '{prefix}<gray>Tải về: <click:open_url:{url}><aqua>{url}</aqua></click>'

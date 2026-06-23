@@ -1,0 +1,59 @@
+# Văn bản GUI / hộp thoại cho EnhancedEchest.
+# Định dạng được tự nhận diện theo từng dòng: dòng chứa '<' là MiniMessage, ngược lại dùng mã '&' cũ.
+
+enderchest:
+  # Tiêu đề cửa sổ kho đồ. {index} = số thứ tự rương.
+  title: 'Rương Ẩn'
+  title-numbered: 'Rương Ẩn {index}'
+  title-temp: '<red>⚠ <reset>Kho Tạm'
+
+dialog:
+
+  # ===== Hộp thoại danh sách (mỗi rương sở hữu là một nút) =====
+  list-title: '<white>Các Rương Ẩn Của Bạn'
+  list-body: '<white>Chọn một rương để mở hoặc quản lý.'
+  # Khi được tích, bấm vào rương sẽ mở menu quản lý; khi bỏ tích (mặc định), mở rương trực tiếp.
+  edit-mode: '<white>Chế độ quản lý (bấm để quản lý rương)'
+  close: '<red>✖ <white>Đóng'
+  # Chú thích khi rê chuột lên mỗi nút rương. {size} = số ô.
+  slots: '<white>{size} ô'
+  # Thêm vào nhãn của rương chính để danh sách đánh dấu rương mà /ec sẽ mở.
+  main-tag: '<gold>★'
+  # Ảnh chụp "thời gian còn lại" tĩnh trên các rương sẽ hết hạn. {time} ví dụ "23h 45m".
+  expires-in: '<white>Hết hạn sau {time}'
+
+  # ===== Danh sách xem của quản trị viên (/ee view <player> [list]) =====
+  # {player} = chủ rương đang được xem.
+  admin-list-title: '<white>Các Rương Ẩn Của {player}'
+  admin-list-body: '<white>Chọn một rương để xem.'
+
+  # ===== Hộp thoại chi tiết (một rương duy nhất) =====
+  # Văn bản căn giữa dưới tiêu đề. {size} = số ô.
+  detail-body: '<white>{size} ô'
+  open: '<white>Mở'
+  open-desc: '<white>Mở rương này.'
+  set-main: '<gold>★ <white>Đặt làm rương chính'
+  set-main-desc: '<white>Đặt đây làm rương được mở bằng /ec và khi chuột phải vào khối rương ẩn.'
+  unset-main: '<gray>☆ <white>Bỏ rương chính'
+  unset-main-desc: '<white>Ngừng dùng rương này làm rương chính. /ec sẽ mở lại menu quản lý.'
+  rename: '<white>Đổi tên'
+  rename-desc: '<white>Đặt tên hiển thị tùy chỉnh cho rương này.'
+  choose-icon: '<white>Chọn biểu tượng'
+  choose-icon-desc: '<white>Chọn một vật phẩm làm biểu tượng cho rương này trong danh sách.'
+  # Quay lại hộp thoại trước; dùng lại cho bộ chọn biểu tượng.
+  back: '<white>Quay lại'
+
+  # ===== Hộp thoại đổi tên =====
+  rename-body: '<white>Nhập tên hiển thị mới cho rương này.'
+  name-label: '<white>Tên hiển thị'
+  save-name: '<green>✔ <white>Lưu'
+  cancel: '<red>✖ <white>Hủy'
+
+  # ===== Hộp thoại chọn biểu tượng =====
+  icon-title: '<white>Chọn Biểu Tượng'
+  # {count} = số vật phẩm khớp (cuộn danh sách để xem thêm).
+  icon-body: '<white>{count} vật phẩm — nhập tên rồi nhấn Tìm để lọc. Cuộn để xem.'
+  icon-search-label: '<white>Tìm'
+  icon-search: '<white>Tìm'
+  icon-default: '<white>Mặc định'
+  icon-default-desc: '<white>Dùng biểu tượng rương ẩn mặc định.'

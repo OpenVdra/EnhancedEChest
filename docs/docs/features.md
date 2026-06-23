@@ -53,15 +53,19 @@ Players are no longer limited to one ender chest. Each player can own several, m
 <CardGrid>
 
 <FeatureCard icon="📋" title="Chest List Menu">
-Run <code>/eclist</code> to open a dialog listing every chest the player owns, each showing its slot count. An <strong>Edit mode</strong> checkbox switches what clicking a chest does: with it off (the default) a chest opens straight away; tick it and clicking a chest opens its management menu instead, where players can rename it or pick which chest is their main. The checkbox toggles in place, so flipping it never reopens the dialog.
+Run <code>/eclist</code> to open a dialog listing every chest the player owns, each showing its slot count. An <strong>Edit mode</strong> checkbox switches what clicking a chest does: with it off (the default) a chest opens straight away; tick it and clicking a chest opens its management menu instead, where players can rename it, give it a custom icon, or pick which chest is their main. The checkbox toggles in place, so flipping it never reopens the dialog.
 </FeatureCard>
 
 <FeatureCard icon="⭐" title="Main Chest">
 With several chests, a player can pick one as their <strong>main</strong>, the one opened directly by <code>/ec</code> and by right-clicking an ender chest block. Until a main is chosen, those open the management menu instead. A new chest is never made main automatically; players set it from the menu (and can always reach the menu with <code>/eclist</code>).
 </FeatureCard>
 
-<FeatureCard icon="✏️" title="Custom Names">
-Each chest can be given a custom name. Named chests show that name as their inventory title; unnamed chests fall back to <em>Ender Chest</em> (chest #1) or <em>Ender Chest {index}</em> for the rest.
+<FeatureCard icon="🎨" title="Customize Each Chest">
+Players personalize their chests straight from the in-game menu — no commands needed. Open a chest's management screen to:
+
+- <strong>Rename it</strong> — a named chest shows that name as its inventory title (unnamed chests fall back to <em>Ender Chest</em> or <em>Ender Chest {index}</em>)
+- <strong>Choose an icon</strong> — pick any item to represent the chest in the list, with a searchable item picker, or reset to the default ender-chest icon
+
 </FeatureCard>
 
 <FeatureCard icon="🛠️" title="Admin Management">
