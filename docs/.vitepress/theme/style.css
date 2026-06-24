@@ -71,3 +71,15 @@
     border: 1px solid var(--vp-c-border);
     box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
 }
+
+/* Wider banner-style showcase image/GIF for the landing page. */
+.showcase-shot {
+    display: block;
+    width: 100%;
+    max-width: 720px;
+    height: auto;
+    margin: 24px auto;
+    border-radius: 14px;
+    border: 1px solid var(--vp-c-border);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
+}

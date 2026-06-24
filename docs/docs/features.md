@@ -2,12 +2,7 @@
 
 Here is an overview of everything **EnhancedEchest** brings to your Minecraft server.
 
-<!-- TODO(showcase): replace this box with a hero screenshot or GIF of the plugin in action. -->
-<div class="showcase-placeholder">
-  <span class="sp-icon">✨</span>
-  <span class="sp-title">Showcase: EnhancedEchest in action</span>
-  <span class="sp-hint">Drop a banner screenshot or GIF of an open enhanced ender chest here.</span>
-</div>
+<img class="showcase-shot" alt="Managing several ender chests in EnhancedEchest" src="/EnhancedEchest/multiple-enderchests.gif" />
 
 ## 📦 Larger Ender Chests
 
