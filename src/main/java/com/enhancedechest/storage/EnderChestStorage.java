@@ -5,6 +5,7 @@ import com.enhancedechest.model.EnderChestData;
 import com.enhancedechest.model.PlayerSettings;
 import org.jetbrains.annotations.Nullable;
 
+import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
 
@@ -24,6 +25,26 @@ public interface EnderChestStorage {
 
     /** Closes all connections. Safe to call even if init() was not completed. */
     void close();
+
+    /**
+     * True if this backend can produce a file snapshot via {@link #backup(Path)}. Only the
+     * file-based SQLite backend supports it today; remote backends (MySQL/MariaDB/Postgres) return
+     * false and must be backed up with the database server's own tooling.
+     */
+    default boolean supportsBackup() {
+        return false;
+    }
+
+    /**
+     * Writes a consistent snapshot of the entire database to {@code target} (which must not already
+     * exist). The snapshot is safe to take while players are saving — it does not interrupt writes.
+     * Only valid when {@link #supportsBackup()} is true.
+     *
+     * @throws Exception if the snapshot fails; the caller logs it and leaves the live DB untouched.
+     */
+    default void backup(Path target) throws Exception {
+        throw new UnsupportedOperationException("Backup is not supported by this storage backend");
+    }
 
     /** Returns the player's chests ordered by index. Empty list if the player owns none. */
     List<ChestSummary> listChests(UUID owner);

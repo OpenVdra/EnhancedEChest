@@ -1,6 +1,6 @@
 # Main Configuration
 
-The `config.yml` file lives in `plugins/EnhancedEchest/`. It controls language, chest size, the database backend, and migration behavior.
+The `config.yml` file lives in `plugins/EnhancedEchest/`. It controls language, chest size, the database backend, automatic backups, and migration behavior.
 
 Click any option or category to view additional information.
 
@@ -89,6 +89,33 @@ Maximum number of pooled database connections. SQLite always uses a single conne
 
 </ConfigGroup>
 
+<ConfigGroup name="backup">
+<template #info>
+Automatically saves a copy of all ender chest data on a timer, so you can restore it if the database is ever corrupted or something goes wrong. <strong>SQLite only</strong> — if you use MySQL/MariaDB/PostgreSQL the plugin skips auto-backup (a warning is logged at startup); use your database server's own backup tools instead. Backups are taken safely while the server runs: no one is kicked and open chests keep working.
+</template>
+
+<ConfigProperty name="enabled" value="true" type="boolean">
+Turn automatic backups on or off.
+</ConfigProperty>
+
+<ConfigProperty name="interval" value="6h" type="string">
+How often to make a backup. Examples: <code>30m</code> (every 30 minutes), <code>6h</code> (every 6 hours), <code>1d</code> (once a day). Units: <code>s m h d w mo y</code>.
+</ConfigProperty>
+
+<ConfigProperty name="keep" value="10" type="number">
+How many backups to keep. When there are more than this, the <strong>oldest</strong> ones are deleted automatically so the folder doesn't grow forever. Use <code>0</code> to keep every backup and never delete any.
+</ConfigProperty>
+
+<ConfigProperty name="on-startup" value="false" type="boolean">
+When <code>true</code>, makes one extra backup right when the server starts, in addition to the normal timer.
+</ConfigProperty>
+
+<ConfigProperty name="folder" value="backups" type="string">
+Folder (inside <code>plugins/EnhancedEchest/</code>) where backup files are saved. Each file is named like <code>enderchests-20260625-143000.db</code> (the date and time it was made), so they sort oldest-to-newest.
+</ConfigProperty>
+
+</ConfigGroup>
+
 <ConfigGroup name="migration">
 <template #info>
 Controls automatic import of existing vanilla ender chest data. See the Migration page for the full workflow.
@@ -135,6 +162,18 @@ database:
   username: root
   password: ""
   pool-size: 10
+
+backup:
+  # Automatic backups of all ender chest data (SQLite only). Taken safely while the server runs.
+  enabled: true
+  # How often to back up: 30m, 6h, 1d, ... (units: s m h d w mo y)
+  interval: 6h
+  # Keep this many recent backups; older ones are auto-deleted. 0 = keep everything.
+  keep: 10
+  # Also back up once on server startup.
+  on-startup: false
+  # Folder (inside plugins/EnhancedEchest/) for backup files.
+  folder: backups
 
 migration:
   # When true: un-migrated players have their vanilla enderchest imported on join

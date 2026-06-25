@@ -1,6 +1,6 @@
 # Cấu Hình Chính
 
-File `config.yml` nằm trong `plugins/EnhancedEchest/`. Nó điều khiển ngôn ngữ, kích thước rương, backend cơ sở dữ liệu và hành vi chuyển dữ liệu.
+File `config.yml` nằm trong `plugins/EnhancedEchest/`. Nó điều khiển ngôn ngữ, kích thước rương, backend cơ sở dữ liệu, sao lưu tự động và hành vi chuyển dữ liệu.
 
 Bấm vào bất kỳ tùy chọn hoặc nhóm nào để xem thêm thông tin.
 
@@ -89,6 +89,33 @@ Số kết nối tối đa trong pool. SQLite luôn dùng một kết nối duy 
 
 </ConfigGroup>
 
+<ConfigGroup name="backup">
+<template #info>
+Tự động lưu một bản sao của toàn bộ dữ liệu rương Ender theo định kỳ, để bạn có thể khôi phục nếu cơ sở dữ liệu bị hỏng hoặc có sự cố. <strong>Chỉ hỗ trợ SQLite</strong> — nếu bạn dùng MySQL/MariaDB/PostgreSQL thì plugin bỏ qua sao lưu tự động (sẽ ghi cảnh báo lúc khởi động); hãy dùng công cụ sao lưu của chính máy chủ cơ sở dữ liệu. Việc sao lưu diễn ra an toàn khi server đang chạy: không ai bị kick và rương đang mở vẫn hoạt động bình thường.
+</template>
+
+<ConfigProperty name="enabled" value="true" type="boolean">
+Bật hoặc tắt sao lưu tự động.
+</ConfigProperty>
+
+<ConfigProperty name="interval" value="6h" type="string">
+Bao lâu sao lưu một lần. Ví dụ: <code>30m</code> (mỗi 30 phút), <code>6h</code> (mỗi 6 giờ), <code>1d</code> (mỗi ngày một lần). Đơn vị: <code>s m h d w mo y</code>.
+</ConfigProperty>
+
+<ConfigProperty name="keep" value="10" type="number">
+Giữ bao nhiêu bản sao lưu. Khi vượt quá số này, các bản <strong>cũ nhất</strong> sẽ tự động bị xóa để thư mục không phình to mãi. Dùng <code>0</code> để giữ tất cả và không bao giờ xóa.
+</ConfigProperty>
+
+<ConfigProperty name="on-startup" value="false" type="boolean">
+Khi <code>true</code>, tạo thêm một bản sao lưu ngay khi server khởi động, bên cạnh lịch định kỳ.
+</ConfigProperty>
+
+<ConfigProperty name="folder" value="backups" type="string">
+Thư mục (bên trong <code>plugins/EnhancedEchest/</code>) nơi lưu các file sao lưu. Mỗi file có tên dạng <code>enderchests-20260625-143000.db</code> (ngày và giờ tạo), nên chúng sắp xếp từ cũ đến mới.
+</ConfigProperty>
+
+</ConfigGroup>
+
 <ConfigGroup name="migration">
 <template #info>
 Điều khiển việc nhập tự động dữ liệu rương Ender vanilla sẵn có. Xem trang Chuyển dữ liệu để biết toàn bộ quy trình.
@@ -135,6 +162,18 @@ database:
   username: root
   password: ""
   pool-size: 10
+
+backup:
+  # Sao lưu tự động toàn bộ dữ liệu rương Ender (chỉ SQLite). Diễn ra an toàn khi server đang chạy.
+  enabled: true
+  # Bao lâu sao lưu một lần: 30m, 6h, 1d, ... (đơn vị: s m h d w mo y)
+  interval: 6h
+  # Giữ bao nhiêu bản gần nhất; các bản cũ bị tự xóa. 0 = giữ tất cả.
+  keep: 10
+  # Sao lưu thêm một lần khi server khởi động.
+  on-startup: false
+  # Thư mục (trong plugins/EnhancedEchest/) chứa file sao lưu.
+  folder: backups
 
 migration:
   # Khi true: người chơi chưa được chuyển sẽ có rương Ender vanilla nhập khi vào

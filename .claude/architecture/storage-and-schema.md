@@ -85,3 +85,26 @@ Converts `ItemStack[] ⇄ byte[]`, parameterized by chest size on decode. `MAX_S
 9. Decode failures throw `CodecException`, which the service surfaces to the player (`chest.codec-failed`)
 and refuses to open rather than risk clobbering stored data. Encoding is always synchronous; only the DB
 write is async.
+
+Stored bytes are `[1-byte version tag] + [body]`. The tag lets the format evolve without orphaning DB rows:
+
+- **0x02 (current, write path)** — body is `ItemStack.serializeItemsAsBytes(ItemStack[])`: stable Paper
+  API, preserves slot positions/length (null → `empty()`) and migrates across Minecraft versions on read.
+- **0x01 (legacy, read-only)** — body is `ItemStack.serializeAsBytes()` of a `SHULKER_BOX` "vehicle"
+  carrying an `@Experimental` `CONTAINER` data component. Older builds wrote this; it's still decoded but
+  never written. Rows re-save as 0x02 the next time a chest is closed (lazy migration). **Keep this
+  branch** — removing it would orphan legacy rows that haven't been touched since the upgrade.
+
+## Auto-backup (`BackupService`)
+
+Scheduled DB snapshots, modelled on `ExpirySweeper`: a FoliaLib async repeating timer at `backup.interval`
+calls `EnderChestStorage.backup(Path)`, then prunes the `backup.folder` to the most recent `backup.keep`
+files (`keep <= 0` = unlimited). Snapshot names are `enderchests-<yyyyMMdd-HHmmss>.db`, so lexical order is
+chronological. All work runs off the region/main thread and failures are logged, never thrown.
+
+Backup is a **capability**, not a guarantee: `supportsBackup()` is false by default and only `SqliteStorage`
+overrides it, using `VACUUM INTO` (a consistent, defragmented copy taken without pausing saves — never copy
+the raw `.db` file). For mysql/mariadb/postgres the service logs a one-time warning and stays idle; those
+must be backed up with the DB server's own tooling. Config: `backup.{enabled,interval,keep,on-startup,folder}`
+— `enabled`/`interval`/`keep` are runtime-tunable via `/ee reload` (`reschedule`); `folder` is bound at
+startup. `on-startup` runs one extra snapshot at enable.

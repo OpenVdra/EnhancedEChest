@@ -53,6 +53,31 @@ database:
   password: ""
   pool-size: 10
 
+backup:
+  # Automatically saves a copy of all ender chest data on a timer, so you can restore it if the
+  # database ever gets corrupted or something goes wrong.
+  #
+  # IMPORTANT: this only works with SQLite (the default storage). If you use mysql/mariadb/postgres,
+  # the plugin will NOT back up for you — use your database server's own backup tools instead.
+  enabled: true
+
+  # How often to make a backup.
+  # Examples: 30m = every 30 minutes, 6h = every 6 hours, 1d = once a day.
+  # (units: s = seconds, m = minutes, h = hours, d = days, w = weeks, mo = months, y = years)
+  interval: 6h
+
+  # How many backups to keep. Once there are more than this, the OLDEST ones are deleted
+  # automatically so the folder doesn't grow forever.
+  # Example: 10 keeps your 10 most recent backups. Use 0 to keep ALL backups and never delete any.
+  keep: 10
+
+  # Make one extra backup right when the server starts up, on top of the normal timer.
+  on-startup: false
+
+  # Folder (inside plugins/EnhancedEchest/) where backup files are saved.
+  # Each backup is named like: enderchests-20260625-143000.db  (date and time it was made).
+  folder: backups
+
 migration:
   # When true: un-migrated players have their vanilla enderchest imported on join.
   # Note: changing this to true and reloading does NOT migrate players already online —

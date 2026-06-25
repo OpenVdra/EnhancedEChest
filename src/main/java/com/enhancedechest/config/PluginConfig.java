@@ -39,6 +39,13 @@ public final class PluginConfig {
     private String dbPassword;
     private int dbPoolSize;
 
+    // Auto-backup (SQLite only)
+    private boolean backupEnabled;
+    private long backupIntervalMillis;
+    private int backupKeep;
+    private boolean backupOnStartup;
+    private String backupFolder;
+
     // Migration
     @Setter
     private boolean migrationEnabled;
@@ -67,6 +74,12 @@ public final class PluginConfig {
         dbUsername = config.getString("database.username", "root");
         dbPassword = config.getString("database.password", "");
         dbPoolSize = config.getInt("database.pool-size", 10);
+
+        backupEnabled        = config.getBoolean("backup.enabled", true);
+        backupIntervalMillis = parseDuration(config.getString("backup.interval", "6h"), "6h");
+        backupKeep           = config.getInt("backup.keep", 10);
+        backupOnStartup      = config.getBoolean("backup.on-startup", false);
+        backupFolder         = config.getString("backup.folder", "backups");
 
         migrationEnabled = config.getBoolean("migration.enabled", false);
     }
