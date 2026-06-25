@@ -8,6 +8,8 @@ Here is an overview of everything **EnhancedEchest** brings to your Minecraft se
 
 EnhancedEchest replaces the vanilla 27-slot ender chest with a configurable GUI of up to **54 slots**.
 
+<img class="feature-shot" alt="An enhanced ender chest with 54 slots" src="https://github.com/user-attachments/assets/a1f8a60e-5f31-4a30-b91b-07c5ba9243bf" />
+
 <CardGrid>
 
 <FeatureCard icon="🖱️" title="Same Block, More Space">
@@ -32,13 +34,13 @@ The default size for a player's first chest is set with <code>enderchest.default
 
 </CardGrid>
 
-<img class="feature-shot" alt="An enhanced ender chest with 54 slots" src="https://github.com/user-attachments/assets/a1f8a60e-5f31-4a30-b91b-07c5ba9243bf" />
-
 ---
 
 ## 🗂️ Multi-Chest System
 
 Players are no longer limited to one ender chest. Each player can own several, managed through an in-game menu.
+
+<img class="feature-shot" width="1422" height="1070" alt="Chest list menu" src="https://github.com/user-attachments/assets/f693c05c-7427-489b-aa41-b68f3341cda1" />
 
 <CardGrid>
 
@@ -71,15 +73,6 @@ With <code>/ee view &lt;player&gt;</code> an admin can open any player's chest, 
 </FeatureCard>
 
 </CardGrid>
-
-The chest menu is built on Paper's modern **Dialog API**, so navigation feels native and doesn't recenter the player's cursor as they move between screens.
-
-<!-- TODO(showcase): replace this box with a GIF of switching between chests in the /eclist menu. -->
-<div class="showcase-placeholder">
-  <span class="sp-icon">🗂️</span>
-  <span class="sp-title">Showcase: managing multiple chests</span>
-  <span class="sp-hint">Drop a GIF of renaming and switching chests from the menu here.</span>
-</div>
 
 ---
 
