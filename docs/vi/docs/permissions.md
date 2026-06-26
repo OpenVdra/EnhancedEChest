@@ -28,7 +28,7 @@ Mỗi lệnh `/ee` chỉ cần đúng node riêng của lệnh đó. Không còn
 
 **`enhancedechest.admin.reload`** — `/ee reload`: tải lại file cấu hình và ngôn ngữ.
 
-**`enhancedechest.admin.migrate`** — `/ee migrate vanilla` và `/ee migrate axvaults`: nhập dữ liệu từ rương Ender vanilla hoặc từ plugin AxVaults.
+**`enhancedechest.admin.migrate`** — `/ee migrate vanilla`, `/ee migrate axvaults` và `/ee migrate playervaultsx`: nhập dữ liệu từ rương Ender vanilla, plugin AxVaults hoặc plugin PlayerVaultsX.
 
 ::: tip
 Để cấp toàn quyền quản trị một lần, cấp `enhancedechest.admin.*` (nếu plugin quyền của bạn hỗ trợ wildcard).

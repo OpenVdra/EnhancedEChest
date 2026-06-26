@@ -159,7 +159,7 @@ public final class ChestOpener {
      *   <li>{@code #N} (or a bare positive integer) opens the chest with that index;</li>
      *   <li>anything else is matched case-insensitively against players' custom chest names.</li>
      * </ul>
-     * A miss reports {@code chest.unknown} rather than silently opening the primary chest.
+     * A miss reports {@code chest.not-found} rather than silently opening the primary chest.
      */
     public void openByQuery(Player player, String query) {
         String trimmed = query.trim();
@@ -178,7 +178,7 @@ public final class ChestOpener {
                             .findFirst()
                             .ifPresentOrElse(
                                     c -> openChest(player, c.index(), null),
-                                    () -> player.sendMessage(lang.get("chest.unknown", "query", trimmed)));
+                                    () -> player.sendMessage(lang.get("chest.not-found")));
                 })
         ).exceptionally(e -> reportOpenFailure(player, e));
     }
@@ -270,7 +270,9 @@ public final class ChestOpener {
                             foliaLib.getScheduler().runAtEntity(player, task -> {
                                 if (!player.isOnline()) return;
                                 if (chests.isEmpty()) {
-                                    player.sendMessage(lang.get("chest.none"));
+                                    // Should not happen: reconcile bootstraps the base chest before this runs.
+                                    logger.warn("{} has no ender chests to list — skipping the management dialog",
+                                            player.getName());
                                     return;
                                 }
                                 player.showDialog(dialogs.listDialog(chests, canSetMain, sourceBlock, editInitial));

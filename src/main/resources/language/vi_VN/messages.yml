@@ -12,10 +12,7 @@ command:
 
 chest:
   load-failed: '{prefix}&fKhông thể tải rương ender của bạn. Vui lòng liên hệ quản trị viên.'
-  codec-failed: '{prefix}&fKhông thể đọc dữ liệu rương ender của bạn. Vui lòng liên hệ quản trị viên.'
   not-found: '{prefix}&fRương ender đó không còn tồn tại.'
-  unknown: '{prefix}&fKhông có rương ender nào khớp với "{query}".'
-  none: '{prefix}&fBạn chưa có rương ender nào.'
   # Hiện (trên action bar) khi người chơi cố bỏ vật phẩm vào rương tạm.
   temp-take-only: '&cĐây là rương tạm. Bạn chỉ có thể lấy vật phẩm ra, không thể bỏ vào.'
   # Hiện cho quản trị viên khi mở rương đang được dùng (Folia chỉ cho một người xem mỗi rương).
@@ -29,13 +26,12 @@ migrate:
   player-offline: '{prefix}&f{player} không trực tuyến.'
   success: '{prefix}&fĐã chuyển dữ liệu cho {player} thành công.'
   already-done: '{prefix}&f{player} đã được chuyển dữ liệu từ trước.'
-  axvaults:
-    no-source: '{prefix}&fKhông tìm thấy cơ sở dữ liệu AxVaults trong plugins/AxVaults (data.db hoặc data.mv.db).'
-    started: '{prefix}&fĐang nhập kho từ AxVaults… tiến trình chạy nền.'
-    complete: '{prefix}&fNhập AxVaults xong. {players} người chơi, {vaults} kho đã nhập, {skipped} bỏ qua, {failed} lỗi.'
-    player-complete: '{prefix}&fNhập AxVaults cho {player}: {vaults} kho đã nhập, {skipped} bỏ qua.'
-    unknown-player: '{prefix}&fKhông tìm thấy người chơi tên "{player}".'
-    failed: '{prefix}&fNhập AxVaults thất bại: {error}'
+  # Nhập từ plugin kho khác — {source} là tên plugin (AxVaults, PlayerVaultsX).
+  no-source: '{prefix}&fKhông tìm thấy dữ liệu {source} để nhập.'
+  started: '{prefix}&fĐang nhập kho từ {source}… tiến trình chạy nền.'
+  import-done: '{prefix}&fNhập {source} xong. {players} người chơi, {vaults} kho đã nhập, {skipped} bỏ qua, {failed} lỗi.'
+  import-player-done: '{prefix}&fNhập {source} cho {player}: {vaults} kho đã nhập, {skipped} bỏ qua.'
+  import-failed: '{prefix}&fNhập {source} thất bại: {error}'
 
 admin:
   reload-success: '{prefix}&fĐã tải lại cấu hình.'

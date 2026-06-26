@@ -2,7 +2,7 @@ package com.enhancedechest.command.admin;
 
 import com.enhancedechest.EnhancedEchestPlugin;
 import com.enhancedechest.lang.LanguageManager;
-import com.enhancedechest.migration.AxVaultsMigrationService;
+import com.enhancedechest.migration.PlayerVaultsXMigrationService;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
@@ -13,23 +13,24 @@ import org.bukkit.entity.Player;
 import java.util.UUID;
 
 /**
- * {@code /enhancedechest migrate axvaults [all|<player>]} — imports vaults from an AxVaults
- * database into EnhancedEchest. The heavy work (DB read, item decode, storage writes) runs on the
- * shared DB executor so the server thread is never blocked; the result is reported when it finishes.
+ * {@code /enhancedechest migrate playervaultsx [all|<player>]} — imports vaults from a PlayerVaultsX
+ * installation into EnhancedEchest. The heavy work (file read, item decode, storage writes) runs on
+ * the shared DB executor so the server thread is never blocked; the result is reported when it
+ * finishes.
  */
-public final class MigrateAxVaultsCommand {
+public final class MigratePlayerVaultsXCommand {
 
     /** Display name substituted into the shared {@code migrate.*} messages as {@code {source}}. */
-    private static final String SOURCE = "AxVaults";
+    private static final String SOURCE = "PlayerVaultsX";
 
-    private MigrateAxVaultsCommand() {}
+    private MigratePlayerVaultsXCommand() {}
 
     public static int executeAll(CommandSourceStack source) {
         EnhancedEchestPlugin plugin = resolve(source);
         if (plugin == null) return 0;
 
         LanguageManager lang = plugin.getLanguageManager();
-        AxVaultsMigrationService service = plugin.getAxVaultsMigrationService();
+        PlayerVaultsXMigrationService service = plugin.getPlayerVaultsXMigrationService();
         CommandSender sender = source.getSender();
 
         if (!service.sourceAvailable()) {
@@ -42,7 +43,7 @@ public final class MigrateAxVaultsCommand {
             try {
                 return service.migrateAll();
             } catch (Exception e) {
-                plugin.getSLF4JLogger().error("[AxVaults] Migration failed", e);
+                plugin.getSLF4JLogger().error("[PlayerVaultsX] Migration failed", e);
                 throw new RuntimeException(e);
             }
         }).whenComplete((result, error) -> {
@@ -65,7 +66,7 @@ public final class MigrateAxVaultsCommand {
         if (plugin == null) return 0;
 
         LanguageManager lang = plugin.getLanguageManager();
-        AxVaultsMigrationService service = plugin.getAxVaultsMigrationService();
+        PlayerVaultsXMigrationService service = plugin.getPlayerVaultsXMigrationService();
         CommandSender sender = source.getSender();
 
         if (!service.sourceAvailable()) {
@@ -84,7 +85,7 @@ public final class MigrateAxVaultsCommand {
             try {
                 return service.migratePlayer(target);
             } catch (Exception e) {
-                plugin.getSLF4JLogger().error("[AxVaults] Migration failed for {}", playerName, e);
+                plugin.getSLF4JLogger().error("[PlayerVaultsX] Migration failed for {}", playerName, e);
                 throw new RuntimeException(e);
             }
         }).whenComplete((result, error) -> {

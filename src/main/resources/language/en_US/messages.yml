@@ -12,10 +12,7 @@ command:
 
 chest:
   load-failed: '{prefix}&fCould not load your ender chest. Please contact an administrator.'
-  codec-failed: '{prefix}&fYour ender chest data could not be read. Please contact an administrator.'
   not-found: '{prefix}&fThat ender chest no longer exists.'
-  unknown: '{prefix}&fNo ender chest matches "{query}".'
-  none: '{prefix}&fYou do not have any ender chests yet.'
   # Shown (on the action bar) when a player tries to put an item into a temporary chest.
   temp-take-only: '&cThis is a temporary chest. You can only take items out, not put them in.'
   # Shown to an admin who tries to open a chest already in use (Folia allows only one viewer per chest).
@@ -28,14 +25,13 @@ migrate:
   complete: '{prefix}&fMigration complete. {migrated} migrated, {skipped} already done.'
   player-offline: '{prefix}&f{player} is not online.'
   success: '{prefix}&fMigrated {player} successfully.'
-  axvaults:
-    no-source: '{prefix}&fNo AxVaults database found in plugins/AxVaults (data.db or data.mv.db).'
-    started: '{prefix}&fImporting vaults from AxVaults… this runs in the background.'
-    complete: '{prefix}&fAxVaults import done. {players} player(s), {vaults} vault(s) imported, {skipped} skipped, {failed} failed.'
-    player-complete: '{prefix}&fAxVaults import for {player}: {vaults} vault(s) imported, {skipped} skipped.'
-    unknown-player: '{prefix}&fNo known player named "{player}".'
-    failed: '{prefix}&fAxVaults import failed: {error}'
   already-done: '{prefix}&f{player} was already migrated.'
+  # Importing from another vault plugin — {source} is the plugin name (AxVaults, PlayerVaultsX).
+  no-source: '{prefix}&fNo {source} data found to import.'
+  started: '{prefix}&fImporting vaults from {source}… this runs in the background.'
+  import-done: '{prefix}&f{source} import done. {players} player(s), {vaults} vault(s) imported, {skipped} skipped, {failed} failed.'
+  import-player-done: '{prefix}&f{source} import for {player}: {vaults} vault(s) imported, {skipped} skipped.'
+  import-failed: '{prefix}&f{source} import failed: {error}'
 
 admin:
   reload-success: '{prefix}&fConfiguration reloaded.'

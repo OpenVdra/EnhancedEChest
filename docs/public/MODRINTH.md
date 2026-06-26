@@ -19,7 +19,7 @@
 - **Permission-granted chests**: grant chests by rank with `enhancedechest.additional_amount.<count>.slot.<size>` (e.g. `...2.slot.54` = two 54-slot chests). Nodes stack, sync on open, and removing one removes those chests (items spill to a recoverable temp chest). The base chest is always protected.
 - **Admin tools**: manage any player's chests online or offline: `/ee add`, `/ee resize`, `/ee delete` (all item-spill safe), and `/ee view <player>` to open someone's chest read-only or editable. Temporary chests can auto-expire (e.g. `7d`, `1d_12h`).
 - **Database-backed**: contents are serialized to **SQLite** (built in, zero setup), **MySQL / MariaDB**, or **PostgreSQL**. All DB work runs off the main thread on a HikariCP pool, so saving never blocks the tick.
-- **Migration**: imports vanilla ender chest data automatically on join, or on demand with `/ee migrate vanilla <player>` / `all`. Also imports from the **AxVaults** plugin with `/ee migrate axvaults` (offline players supported, tested with AxVaults 2.15.0). Each player is migrated only once.
+- **Migration**: imports vanilla ender chest data automatically on join, or on demand with `/ee migrate vanilla <player>` / `all`. Also imports from the **AxVaults** plugin with `/ee migrate axvaults` (tested with AxVaults 2.15.0) and the **PlayerVaultsX** plugin with `/ee migrate playervaultsx` (tested with PlayerVaultsX 4.4.13), both supporting offline players. Each player is migrated only once.
 - **Bedrock support**: menus use Paper's **Dialog API**, which [Geyser](https://geysermc.org/) converts to native Bedrock forms with no extra setup.
 - **Localization**: all text lives in editable language files with full **MiniMessage** formatting.
 
@@ -52,6 +52,7 @@
 - `/ee view <player> [list | index]`: open another player's chest, view-only or editable
 - `/ee migrate vanilla <player> | all`: import vanilla ender chest data
 - `/ee migrate axvaults [<player>]`: import vaults from the AxVaults plugin
+- `/ee migrate playervaultsx [<player>]`: import vaults from the PlayerVaultsX plugin
 - `/ee reload`: reload config and language files
 
 ## Requirements

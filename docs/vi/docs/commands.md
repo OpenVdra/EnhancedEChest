@@ -69,3 +69,9 @@ Nhập nội dung rương Ender vanilla vào plugin. Mỗi người chơi chỉ 
 Nhập kho từ plugin AxVaults vào các rương EnhancedEchest tương ứng. Hoạt động cả với người chơi ngoại tuyến và đọc trực tiếp cơ sở dữ liệu của AxVaults. Xem trang [Chuyển Dữ Liệu](/vi/docs/migration#axvaults) để biết cách thiết lập.
 
 </CommandRow>
+
+<CommandRow :commands="['/ee migrate playervaultsx', '/ee migrate playervaultsx &lt;player&gt;']" permission="enhancedechest.admin.migrate">
+
+Nhập kho từ plugin PlayerVaultsX vào các rương EnhancedEchest tương ứng. Hoạt động cả với người chơi ngoại tuyến và đọc trực tiếp dữ liệu kho tệp phẳng của PlayerVaultsX. Xem trang [Chuyển Dữ Liệu](/vi/docs/migration#playervaultsx) để biết cách thiết lập.
+
+</CommandRow>

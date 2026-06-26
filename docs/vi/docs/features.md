@@ -107,11 +107,12 @@ Với <code>/ee view &lt;player&gt;</code> quản trị viên có thể mở rư
 
 ## Chuyển Dữ Liệu {#migration}
 
-Đã có người chơi với dữ liệu rương Ender? EnhancedEchest có thể nhập từ rương Ender vanilla hoặc từ plugin AxVaults.
+Đã có người chơi với dữ liệu rương Ender? EnhancedEchest có thể nhập từ rương Ender vanilla, plugin AxVaults, hoặc plugin PlayerVaultsX.
 
 - Khi <code>migration.enabled</code> là <code>true</code>, rương Ender vanilla của người chơi chưa được chuyển sẽ được nhập tự động khi họ vào
 - Quản trị viên có thể kích hoạt chuyển dữ liệu vanilla thủ công bằng <code>/ee migrate vanilla</code>
 - Nhập từ AxVaults bằng <code>/ee migrate axvaults</code>, kể cả người chơi ngoại tuyến (đã kiểm thử với AxVaults 2.15.0)
+- Nhập từ PlayerVaultsX bằng <code>/ee migrate playervaultsx</code>, kể cả người chơi ngoại tuyến (đã kiểm thử với PlayerVaultsX 4.4.13)
 
 Xem trang [Chuyển Dữ Liệu](/vi/docs/migration) để biết chi tiết.
 

@@ -200,7 +200,8 @@ public final class ChestSessionManager {
         Inventory inv = buildSharedInventory(data);
         if (inv == null) {
             sessions.remove(key, created);
-            for (Pending p : waiters) notifyOnPlayer(p.player(), "chest.codec-failed");
+            // The codec failure is already logged in buildSharedInventory; tell viewers the generic load error.
+            for (Pending p : waiters) notifyOnPlayer(p.player(), "chest.load-failed");
             return;
         }
         created.kind  = data.kind();

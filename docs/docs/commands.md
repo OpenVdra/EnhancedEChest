@@ -69,3 +69,9 @@ Imports vanilla ender chest contents into the plugin. Each player is migrated on
 Imports vaults from the AxVaults plugin into matching EnhancedEchest chests. Works for offline players and reads the AxVaults database directly. See the [Migration](/docs/migration#axvaults) page for setup.
 
 </CommandRow>
+
+<CommandRow :commands="['/ee migrate playervaultsx', '/ee migrate playervaultsx &lt;player&gt;']" permission="enhancedechest.admin.migrate">
+
+Imports vaults from the PlayerVaultsX plugin into matching EnhancedEchest chests. Works for offline players and reads the PlayerVaultsX flat-file vault data directly. See the [Migration](/docs/migration#playervaultsx) page for setup.
+
+</CommandRow>

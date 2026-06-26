@@ -28,7 +28,7 @@ Each `/ee` command requires only its own node. There is no separate base permiss
 
 **`enhancedechest.admin.reload`** — `/ee reload`: reload config and language files.
 
-**`enhancedechest.admin.migrate`** — `/ee migrate vanilla` and `/ee migrate axvaults`: import data from vanilla ender chests or from the AxVaults plugin.
+**`enhancedechest.admin.migrate`** — `/ee migrate vanilla`, `/ee migrate axvaults`, and `/ee migrate playervaultsx`: import data from vanilla ender chests, the AxVaults plugin, or the PlayerVaultsX plugin.
 
 ::: tip
 To grant full admin access in one go, give `enhancedechest.admin.*` (if your permission plugin supports wildcards).

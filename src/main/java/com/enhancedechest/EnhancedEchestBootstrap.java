@@ -3,6 +3,7 @@ package com.enhancedechest;
 import com.enhancedechest.command.EnderChestOpenCommand;
 import com.enhancedechest.command.admin.ChestAdminCommand;
 import com.enhancedechest.command.admin.MigrateAxVaultsCommand;
+import com.enhancedechest.command.admin.MigratePlayerVaultsXCommand;
 import com.enhancedechest.command.admin.MigrateVanillaCommand;
 import com.enhancedechest.command.admin.ReloadCommand;
 import com.mojang.brigadier.LiteralMessage;
@@ -320,6 +321,17 @@ public final class EnhancedEchestBootstrap implements PluginBootstrap {
                                         .then(Commands.argument("player", StringArgumentType.word())
                                                 .suggests(KNOWN_PLAYERS)
                                                 .executes(ctx -> MigrateAxVaultsCommand.executePlayer(
+                                                        ctx.getSource(),
+                                                        StringArgumentType.getString(ctx, "player")))))
+                                // /ee migrate playervaultsx [all|<player>] — import vaults from PlayerVaultsX
+                                .then(Commands.literal("playervaultsx")
+                                        .requires(src -> src.getSender().hasPermission(ADMIN_MIGRATE_PERMISSION))
+                                        .executes(ctx -> MigratePlayerVaultsXCommand.executeAll(ctx.getSource()))
+                                        .then(Commands.literal("all")
+                                                .executes(ctx -> MigratePlayerVaultsXCommand.executeAll(ctx.getSource())))
+                                        .then(Commands.argument("player", StringArgumentType.word())
+                                                .suggests(KNOWN_PLAYERS)
+                                                .executes(ctx -> MigratePlayerVaultsXCommand.executePlayer(
                                                         ctx.getSource(),
                                                         StringArgumentType.getString(ctx, "player"))))))
                         .then(Commands.literal("reload")
