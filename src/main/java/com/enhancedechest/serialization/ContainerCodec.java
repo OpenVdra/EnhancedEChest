@@ -43,17 +43,13 @@ public final class ContainerCodec {
 
     /**
      * Encodes inventory contents to bytes for DB storage in the current format. Null entries in the
-     * array are treated as empty (AIR) slots. The array length sets how many slots are encoded;
-     * decode() later pads/clamps back to a target size.
+     * array are treated as empty (AIR) slots — {@link ItemStack#serializeItemsAsBytes(ItemStack[])}
+     * serializes nulls as {@link ItemStack#empty()} itself, preserving slot positions and array
+     * length. The array length sets how many slots are encoded; decode() later pads/clamps back to
+     * a target size.
      */
     public byte[] encode(ItemStack[] contents) {
-        int count = contents != null ? contents.length : 0;
-        ItemStack[] slots = new ItemStack[count];
-        for (int i = 0; i < count; i++) {
-            ItemStack item = contents[i];
-            slots[i] = isEmpty(item) ? ItemStack.empty() : item;
-        }
-
+        ItemStack[] slots = contents != null ? contents : new ItemStack[0];
         byte[] body = ItemStack.serializeItemsAsBytes(slots);
         byte[] result = new byte[1 + body.length];
         result[0] = FORMAT_VERSION;
