@@ -1,21 +1,21 @@
 # Ngôn Ngữ
 
-Mọi văn bản hiển thị cho người chơi trong EnhancedEchest nằm trong các file ngôn ngữ có thể chỉnh sửa, nên bạn có thể dịch hoặc đổi lời mọi tin nhắn. File được tải từ:
+Mọi văn bản hiển thị cho người chơi trong EnhancedEchest nằm trong các file ngôn ngữ có thể chỉnh sửa. File được tải từ:
 
 ```
 plugins/EnhancedEchest/language/<locale>/
 ```
 
-Locale đang dùng được đặt bởi tùy chọn `language` trong [`config.yml`](/vi/docs/configuration) (mặc định: `en_US`). Plugin đi kèm các locale `en_US` (English) và `vi_VN` (Tiếng Việt).
+Locale đang dùng được đặt bởi tùy chọn `language` trong [`config.yml`](/vi/docs/configuration) (mặc định: `en_US`). Plugin đi kèm `en_US` (English) và `vi_VN` (Tiếng Việt).
 
-## Các file
+## Các File
 
 | File | Nội dung |
 |------|----------|
 | `messages.yml` | Prefix của plugin và mọi tin nhắn chat (lệnh, lỗi, phản hồi quản trị, thông báo cập nhật) |
 | `gui.yml` | Tiêu đề kho đồ và các nhãn dùng trong menu quản lý `/eclist` |
 
-## Định dạng
+## Định Dạng
 
 Màu được viết bằng mã `&` cũ, bao gồm màu hex dạng `&#RRGGBB`. Các placeholder như `{prefix}`, `{player}`, `{index}` và `{size}` được thay thế lúc chạy.
 
@@ -26,42 +26,38 @@ admin:
   chest-added: '{prefix}&aAdded Ender Chest &e{index}&a (&e{size}&a slots) to &e{player}&a.'
 ```
 
-Tin nhắn mặc định dùng một bảng màu đơn giản:
+Tin nhắn mặc định dùng bảng màu đơn giản:
 
 | Màu | Dùng cho |
 |-----|----------|
 | `&#FF4444` | Lỗi |
-| `&#F0C857` | Cảnh báo / lưu ý |
+| `&#F0C857` | Cảnh báo |
 | `&a` | Thành công |
 | `&e` / `&f` | Giá trị được làm nổi bật |
-| `&7` / `&8` | Văn bản mờ và dấu phân cách |
+| `&7` / `&8` | Văn bản mờ |
 
 ::: tip MiniMessage cũng được hỗ trợ
-Bất kỳ tin nhắn nào chứa `<` sẽ được phân tích theo [MiniMessage](https://docs.advntr.dev/minimessage/format) thay vì mã cũ. Đây là cách thông báo cập nhật giữ được liên kết tải về bấm được (`<click:open_url:...>`).
+Bất kỳ tin nhắn nào chứa `<` sẽ được phân tích theo [MiniMessage](https://docs.advntr.dev/minimessage/format) thay vì mã cũ.
 :::
 
-## Tiêu đề rương
+## Tiêu Đề Rương
 
 `gui.yml` điều khiển cách hiển thị tiêu đề kho đồ của rương:
 
 ```yaml
 enderchest:
-  # Tiêu đề của rương đầu tiên (số thứ tự 1) khi nó không có tên tùy chỉnh (không hiện số).
   title: 'Ender Chest'
-  # Tiêu đề của các rương 2+ khi chúng không có tên tùy chỉnh. {index} là số rương.
   title-numbered: 'Ender Chest {index}'
 ```
 
-- Rương **#1** hiển thị `title` không kèm số ("Ender Chest")
-- Rương **#2 trở lên** hiển thị `title-numbered` kèm số thứ tự của chúng
-- Một rương có **tên tùy chỉnh** (đặt qua `/eclist` → Đổi tên) sẽ hiển thị tên đó thay thế
+- Rương **#1** hiển thị `title`
+- Rương **#2 trở lên** hiển thị `title-numbered` kèm số thứ tự
+- Rương có **tên tùy chỉnh** (đặt qua `/eclist`) hiển thị tên đó thay thế
 
-Phần `dialog:` của `gui.yml` chứa văn bản nút và nhãn cho menu `/eclist`: `open`, `rename`, `set-main`, `back`, v.v.
-
-## Thêm một bản dịch
+## Thêm Một Bản Dịch
 
 1. Sao chép thư mục `en_US` bên trong `language/`
-2. Đổi tên bản sao thành locale của bạn (ví dụ `de_DE` hoặc `vi_VN`)
+2. Đổi tên bản sao thành locale của bạn (ví dụ `de_DE` hoặc `fr_FR`)
 3. Dịch văn bản bên trong `messages.yml` và `gui.yml`
 4. Đặt `language: <locale-của-bạn>` trong `config.yml`
 5. Chạy `/ee reload`

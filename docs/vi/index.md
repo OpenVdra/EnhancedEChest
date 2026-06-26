@@ -20,22 +20,22 @@ hero:
       link: /vi/docs/download
 
 features:
-  - title: 📦 Tối đa 54 Ô
+  - title: Tối đa 54 Ô
     details: Thay rương Ender vanilla chật chội bằng một rương đôi đầy đủ, sáu hàng thay vì ba.
     link: /vi/docs/features
-  - title: 🗂️ Nhiều Rương
-    details: Cho người chơi nhiều hơn một rương Ender. Mở, đặt tên và chuyển đổi giữa chúng từ một menu trong game gọn gàng.
+  - title: Nhiều Rương Cho Mỗi Người Chơi
+    details: Cho người chơi nhiều hơn một rương Ender. Mở, đặt tên và chuyển đổi giữa chúng từ một menu trong game.
     link: /vi/docs/features
-  - title: 💾 Lưu Bằng Cơ Sở Dữ Liệu
-    details: Dữ liệu lưu trong SQLite, MySQL, MariaDB hoặc PostgreSQL, tồn tại qua các lần khởi động lại, reset và xóa thế giới.
-    link: /vi/docs/database
-  - title: 🛡️ Không Nhân Đôi Vật Phẩm
-    details: Kho đồ được tải mới khi mở và lưu ngay khi đóng, với cơ chế chờ lưu giúp vô hiệu hóa các lỗi nhân đôi.
+  - title: Tên và Biểu Tượng Tùy Chỉnh
+    details: Mỗi rương có thể có tên và biểu tượng riêng, chọn trực tiếp từ bộ chọn vật phẩm trong game, không cần lệnh.
     link: /vi/docs/features
-  - title: 🌿 Sẵn Sàng Cho Folia
-    details: Xây dựng trên bộ lập lịch nhận biết vùng (region), chạy trên Paper, Folia và các bản fork của Paper mà không cần thay đổi mã.
+  - title: Cấp Rương Theo Quyền
+    details: Phát rương theo rank hoặc nhóm quyền. Việc cấp đồng bộ tự động và thu hồi sạch sẽ khi rank thay đổi.
+    link: /vi/docs/permissions
+  - title: Tương Thích Bedrock
+    details: Menu trong game hiển thị dưới dạng form Bedrock native cho người chơi vào qua Geyser, không cần cấu hình thêm.
     link: /vi/docs/features
-  - title: 🔓 Mã Nguồn Mở
+  - title: Mã Nguồn Mở
     details: EnhancedEchest hoàn toàn miễn phí và mã nguồn mở trên GitHub. Fork nó, phát triển thêm, hoặc đóng góp lại.
     link: https://github.com/OpenVdra/EnhancedEchest
 ---

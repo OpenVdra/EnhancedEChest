@@ -1,43 +1,43 @@
 # Chào mừng đến với EnhancedEchest
 
-**EnhancedEchest** là một plugin Minecraft miễn phí, mã nguồn mở, nâng cấp rương Ender vanilla thành một hệ thống lưu trữ lớn hơn, bền bỉ, nhiều rương. Thay vì ba hàng chật chội nằm trong một file người chơi duy nhất, mỗi người chơi nhận được các rương Ender với tối đa **54 ô**, được lưu vào một cơ sở dữ liệu thực sự để nội dung tồn tại qua các lần khởi động lại, reset thế giới và di chuyển máy chủ.
+**EnhancedEchest** là một plugin Minecraft miễn phí, mã nguồn mở, nâng cấp rương Ender vanilla thành hệ thống nhiều rương lớn hơn và bền bỉ hơn. Người chơi có rương Ender tối đa **54 ô**, có thể sở hữu nhiều rương cùng lúc và quản lý chúng từ một menu trong game gọn gàng.
 
-## Điều hướng nhanh
+## Điều Hướng Nhanh
 
 <CardGrid>
 
-<DocCard icon="📥" title="Cài đặt" link="/vi/docs/installation" desc="Cài EnhancedEchest lên máy chủ của bạn chỉ trong vài phút." />
+<DocCard icon="Download" title="Cài Đặt" link="/vi/docs/installation" desc="Cài EnhancedEchest lên máy chủ của bạn chỉ trong vài phút." />
 
-<DocCard icon="✨" title="Tính năng" link="/vi/docs/features" desc="Rương lớn hơn, quản lý nhiều rương, lưu bằng cơ sở dữ liệu và hơn thế nữa." />
+<DocCard icon="Sparkles" title="Tính Năng" link="/vi/docs/features" desc="Rương lớn hơn, quản lý nhiều rương, tên và biểu tượng tùy chỉnh, và hơn thế nữa." />
 
-<DocCard icon="⌨️" title="Lệnh" link="/vi/docs/commands" desc="Tham khảo đầy đủ các lệnh kèm cú pháp và mô tả." />
+<DocCard icon="Terminal" title="Lệnh" link="/vi/docs/commands" desc="Tham khảo đầy đủ các lệnh kèm cú pháp và mô tả." />
 
-<DocCard icon="🔐" title="Quyền" link="/vi/docs/permissions" desc="Các node quyền cho tính năng của người chơi và quản trị viên." />
+<DocCard icon="ShieldCheck" title="Quyền" link="/vi/docs/permissions" desc="Các node quyền cho tính năng của người chơi và quản trị viên." />
 
-<DocCard icon="⚙️" title="Cấu hình" link="/vi/docs/configuration" desc="Cấu hình kích thước rương, cơ sở dữ liệu, chuyển dữ liệu và ngôn ngữ." />
+<DocCard icon="Settings" title="Cấu Hình" link="/vi/docs/configuration" desc="Cấu hình kích thước rương, lưu trữ, chuyển dữ liệu và ngôn ngữ." />
 
-<DocCard icon="💾" title="Cơ sở dữ liệu" link="/vi/docs/database" desc="Thiết lập lưu trữ SQLite, MySQL, MariaDB hoặc PostgreSQL." />
+<DocCard icon="Package" title="Tải Về" link="/vi/docs/download" desc="Tải bản mới nhất từ Modrinth, Spigot, hoặc Hangar." />
 
 </CardGrid>
 
-## Vì sao chọn EnhancedEchest?
+## EnhancedEchest Mang Lại Gì
 
 <CardGrid>
 
-<FeatureCard icon="📦" title="Nhiều Không Gian Hơn">
-Rương Ender vanilla chứa 27 vật phẩm. EnhancedEchest cho người chơi một rương có thể cấu hình lên tới 54 ô (một rương đôi đầy đủ), mở từ chính khối rương Ender đó hoặc bằng lệnh <code>/ec</code>.
+<FeatureCard icon="Package" title="Nhiều Không Gian Hơn">
+Rương Ender vanilla chứa 27 vật phẩm. EnhancedEchest cho mỗi người chơi một rương có thể cấu hình lên tới 54 ô, mở từ chính khối rương Ender đó hoặc bằng lệnh <code>/ec</code>.
 </FeatureCard>
 
-<FeatureCard icon="🗂️" title="Nhiều Rương Cho Mỗi Người Chơi">
-Người chơi không còn bị giới hạn ở một rương Ender duy nhất. Quản trị viên có thể cấp thêm rương, mỗi rương với kích thước và tên tùy chỉnh riêng, chuyển đổi được từ một menu quản lý trong game.
+<FeatureCard icon="Archive" title="Nhiều Rương Cho Mỗi Người Chơi">
+Người chơi không còn bị giới hạn ở một rương Ender duy nhất. Quản trị viên có thể cấp thêm rương, mỗi rương có kích thước và tên tùy chỉnh riêng, chuyển đổi được từ menu quản lý trong game.
 </FeatureCard>
 
-<FeatureCard icon="💾" title="Lưu Trữ Bền Bỉ">
-Toàn bộ nội dung được lưu trong cơ sở dữ liệu: SQLite dùng ngay không cần thiết lập, hoặc MySQL / MariaDB / PostgreSQL cho các network. Dữ liệu được chia sẻ gọn gàng qua các lần khởi động lại và, với cơ sở dữ liệu dùng chung, qua các máy chủ.
+<FeatureCard icon="Palette" title="Tên và Biểu Tượng Tùy Chỉnh">
+Mỗi rương có thể có tên và biểu tượng riêng, chọn trực tiếp từ bộ chọn vật phẩm trong game, không cần lệnh. Rương đã đặt tên sẽ hiển thị tên đó làm tiêu đề kho đồ.
 </FeatureCard>
 
-<FeatureCard icon="🛡️" title="Chống Nhân Đôi Theo Thiết Kế">
-Nội dung được tải mới khi rương được mở và ghi ngay khi đóng. Một chuỗi chờ lưu (pending-save) đảm bảo lần mở tiếp theo không bao giờ đọc dữ liệu cũ, đóng lại cánh cửa nhân đôi vật phẩm dựa trên reload.
+<FeatureCard icon="Key" title="Cấp Rương Theo Quyền">
+Phát thêm rương theo rank bằng node quyền. Việc cấp đồng bộ khi mở rương và thu hồi sạch sẽ khi rank thay đổi, dồn vật phẩm sang rương tạm có thể khôi phục.
 </FeatureCard>
 
 </CardGrid>

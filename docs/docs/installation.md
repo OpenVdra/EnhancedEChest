@@ -11,11 +11,11 @@ Before installing EnhancedEchest, make sure your server meets these requirements
 | **Java Version** | Java 25 |
 
 ::: warning Paper 26.1.x is required
-EnhancedEchest relies on Paper-only APIs (the plugin bootstrap, Brigadier commands, and the Dialog API) and is built against the **26.1.x** API. It requires Paper or a Paper-compatible fork (Folia, Purpur); it will **not** run on CraftBukkit, nor on other Minecraft versions.
+EnhancedEchest requires Paper or a Paper-compatible fork (Folia, Purpur). It will **not** run on CraftBukkit, nor on other Minecraft versions.
 :::
 
 ::: warning Java 25 is required
-The plugin is compiled for Java 25. Make sure your server runs on a Java 25 (or newer) runtime, otherwise it will fail to load.
+The plugin is compiled for Java 25. Make sure your server runs on Java 25 or newer, otherwise it will fail to load.
 :::
 
 ## Download
@@ -47,7 +47,7 @@ Choose your preferred download source:
 4. **Start your server** (avoid using `/reload`, it can cause issues)
 
 ::: tip No extra dependencies
-All database drivers, the connection pool, and the scheduler are bundled inside the jar. You do **not** need to install anything else on your server.
+Everything the plugin needs is bundled inside the jar. You do not need to install anything else on your server.
 :::
 
 ### 2. Verify Installation
@@ -58,7 +58,7 @@ Run the following in your server console or in-game to confirm the plugin loaded
 /plugins
 ```
 
-EnhancedEchest should appear in the list with a green status. By default it runs on **SQLite**, so it works out of the box with no further setup.
+EnhancedEchest should appear in the list with a green status. By default it uses SQLite, so it works out of the box with no further setup.
 
 ### 3. Generated Files
 
@@ -66,8 +66,8 @@ The plugin automatically creates its files in `plugins/EnhancedEchest/`:
 
 | File | Description |
 |------|-------------|
-| `config.yml` | Main configuration: chest size, database, migration |
-| `enderchests.db` | SQLite database (default storage backend) |
+| `config.yml` | Main configuration: chest size, storage backend, migration |
+| `enderchests.db` | SQLite database (default storage) |
 | `language/<locale>/messages.yml` | Player-facing messages and the plugin prefix |
 | `language/<locale>/gui.yml` | Inventory titles and chest-menu labels |
 
@@ -78,7 +78,7 @@ The plugin automatically creates its files in `plugins/EnhancedEchest/`:
 3. **Replace** the old `.jar` file with the new one
 4. **Start** your server
 
-Your database and configuration are preserved across updates.
+Your data and configuration are preserved across updates.
 
 ## Getting Help
 

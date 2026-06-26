@@ -1,8 +1,6 @@
 # Cài Đặt
 
-## Yêu cầu
-
-Trước khi cài EnhancedEchest, hãy đảm bảo máy chủ của bạn đáp ứng các yêu cầu sau:
+## Yêu Cầu
 
 | Yêu cầu | Thông số |
 |---------|----------|
@@ -11,14 +9,14 @@ Trước khi cài EnhancedEchest, hãy đảm bảo máy chủ của bạn đáp
 | **Phiên bản Java** | Java 25 |
 
 ::: warning Cần Paper 26.1.x
-EnhancedEchest dựa vào các API chỉ-có-ở-Paper (bootstrap plugin, lệnh Brigadier và Dialog API) và được build trên API **26.1.x**. Nó cần Paper hoặc một bản fork tương thích Paper (Folia, Purpur); nó sẽ **không** chạy trên CraftBukkit, cũng như trên các phiên bản Minecraft khác.
+EnhancedEchest yêu cầu Paper hoặc bản fork tương thích (Folia, Purpur). Nó sẽ **không** chạy trên CraftBukkit hay các phiên bản Minecraft khác.
 :::
 
 ::: warning Cần Java 25
-Plugin được biên dịch cho Java 25. Hãy đảm bảo máy chủ của bạn chạy trên môi trường Java 25 (hoặc mới hơn), nếu không nó sẽ không tải được.
+Plugin được biên dịch cho Java 25. Hãy đảm bảo máy chủ chạy Java 25 hoặc mới hơn, nếu không nó sẽ không tải được.
 :::
 
-## Tải về
+## Tải Về
 
 Chọn nguồn tải bạn ưa thích:
 
@@ -37,52 +35,49 @@ Chọn nguồn tải bạn ưa thích:
   </a>
 </div>
 
-## Các bước cài đặt
+## Các Bước Cài Đặt
 
-### 1. Cài plugin
+### 1. Cài Plugin
 
-1. **Dừng máy chủ** của bạn hoàn toàn
+1. **Dừng máy chủ** hoàn toàn
 2. Tải file `.jar` mới nhất từ một nguồn ở trên
-3. Đặt nó vào thư mục `plugins/` của máy chủ
-4. **Khởi động máy chủ** (tránh dùng `/reload`, nó có thể gây lỗi)
+3. Đặt vào thư mục `plugins/` của máy chủ
+4. **Khởi động máy chủ** (tránh dùng `/reload`, có thể gây lỗi)
 
-::: tip Không cần phụ thuộc bên ngoài
-Mọi driver cơ sở dữ liệu, connection pool và bộ lập lịch đều được đóng gói bên trong jar. Bạn **không** cần cài gì khác trên máy chủ.
+::: tip Không cần cài thêm gì
+Mọi thứ plugin cần đã được đóng gói bên trong jar. Bạn không cần cài thêm gì trên máy chủ.
 :::
 
-### 2. Kiểm tra cài đặt
+### 2. Kiểm Tra Cài Đặt
 
-Chạy lệnh sau trong console máy chủ hoặc trong game để xác nhận plugin đã tải:
+Chạy lệnh sau trong console hoặc trong game để xác nhận plugin đã tải:
 
 ```
 /plugins
 ```
 
-EnhancedEchest sẽ xuất hiện trong danh sách với trạng thái màu xanh. Mặc định nó chạy trên **SQLite**, nên hoạt động ngay không cần thiết lập thêm.
+EnhancedEchest sẽ xuất hiện trong danh sách với trạng thái màu xanh. Mặc định plugin dùng SQLite, hoạt động ngay không cần thiết lập thêm.
 
-### 3. Các file được tạo
+### 3. Các File Được Tạo
 
-Plugin tự động tạo các file của nó trong `plugins/EnhancedEchest/`:
+Plugin tự động tạo các file trong `plugins/EnhancedEchest/`:
 
 | File | Mô tả |
 |------|-------|
-| `config.yml` | Cấu hình chính: kích thước rương, cơ sở dữ liệu, chuyển dữ liệu |
-| `enderchests.db` | Cơ sở dữ liệu SQLite (backend lưu trữ mặc định) |
+| `config.yml` | Cấu hình chính: kích thước rương, lưu trữ, chuyển dữ liệu |
+| `enderchests.db` | Cơ sở dữ liệu SQLite (lưu trữ mặc định) |
 | `language/<locale>/messages.yml` | Tin nhắn hiển thị cho người chơi và prefix của plugin |
 | `language/<locale>/gui.yml` | Tiêu đề kho đồ và nhãn menu rương |
 
-## Cập nhật
+## Cập Nhật
 
 1. **Tải** phiên bản mới
 2. **Dừng** máy chủ
 3. **Thay** file `.jar` cũ bằng file mới
 4. **Khởi động** máy chủ
 
-Cơ sở dữ liệu và cấu hình của bạn được giữ nguyên qua các lần cập nhật.
+Dữ liệu và cấu hình của bạn được giữ nguyên qua các lần cập nhật.
 
-## Nhận trợ giúp
+## Nhận Trợ Giúp
 
-Nếu bạn gặp sự cố:
-
-1. Kiểm tra **log console** để tìm thông báo lỗi
-2. Báo lỗi trên **[GitHub Issues](https://github.com/OpenVdra/EnhancedEchest/issues)**
+Nếu gặp sự cố, kiểm tra **log console** để tìm thông báo lỗi hoặc báo lỗi trên **[GitHub Issues](https://github.com/OpenVdra/EnhancedEchest/issues)**.

@@ -84,14 +84,14 @@ Mật khẩu cơ sở dữ liệu. Để trống nếu không có mật khẩu.
 </ConfigProperty>
 
 <ConfigProperty name="pool-size" value="10" type="number">
-Số kết nối tối đa trong pool. SQLite luôn dùng một kết nối duy nhất bất kể giá trị này.
+Số kết nối tối đa trong pool. Chỉ áp dụng cho MySQL, MariaDB và PostgreSQL.
 </ConfigProperty>
 
 </ConfigGroup>
 
 <ConfigGroup name="backup">
 <template #info>
-Tự động lưu một bản sao của toàn bộ dữ liệu rương Ender theo định kỳ, để bạn có thể khôi phục nếu cơ sở dữ liệu bị hỏng hoặc có sự cố. <strong>Chỉ hỗ trợ SQLite</strong> — nếu bạn dùng MySQL/MariaDB/PostgreSQL thì plugin bỏ qua sao lưu tự động (sẽ ghi cảnh báo lúc khởi động); hãy dùng công cụ sao lưu của chính máy chủ cơ sở dữ liệu. Việc sao lưu diễn ra an toàn khi server đang chạy: không ai bị kick và rương đang mở vẫn hoạt động bình thường.
+Tự động lưu bản sao toàn bộ dữ liệu rương Ender theo định kỳ. <strong>Chỉ hỗ trợ SQLite</strong> — nếu dùng MySQL/MariaDB/PostgreSQL, hãy dùng công cụ sao lưu của chính máy chủ cơ sở dữ liệu.
 </template>
 
 <ConfigProperty name="enabled" value="true" type="boolean">

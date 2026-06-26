@@ -9,21 +9,19 @@ EnhancedEchest stores every ender chest's contents in a database. You choose the
 | **MariaDB** | `mariadb` | Networks sharing one database |
 | **PostgreSQL** | `postgres` | Setups already running Postgres |
 
-::: tip No drivers needed
-All database drivers and the HikariCP connection pool are bundled and relocated inside the plugin jar. You never need to install drivers on your server.
+::: tip No extra installations needed
+All database drivers are bundled inside the plugin jar. You do not need to install anything on your server.
 :::
 
 ## SQLite (default)
 
-SQLite requires no configuration. On first start the plugin creates the database file in its data folder:
+SQLite requires no configuration. On first start the plugin creates the database file at `plugins/EnhancedEchest/enderchests.db`.
 
 ```yaml
 database:
   type: sqlite
   sqlite-file: enderchests.db
 ```
-
-The file is created at `plugins/EnhancedEchest/enderchests.db`. SQLite always uses a single connection, so `pool-size` is ignored in this mode.
 
 ## MySQL / MariaDB
 
@@ -42,7 +40,6 @@ database:
 
 - Create the database (schema) beforehand, for example `CREATE DATABASE enhancedechest;`
 - The plugin creates and manages its own tables automatically
-- The bundled driver is compatible with MySQL 5.7+ and 8.x
 
 ## PostgreSQL
 
@@ -59,10 +56,10 @@ database:
 
 The default PostgreSQL port is **5432**, so remember to change `port` from the MySQL default.
 
-## Sharing data across servers
+## Sharing Data Across Servers
 
-Because all data lives in the database, pointing several servers at the **same** MySQL/MariaDB/PostgreSQL database lets them share ender chest storage. The plugin's dupe-safe load/save model (loading fresh on open and saving immediately on close) keeps contents consistent as long as a player is only ever on one server at a time.
+Pointing several servers at the **same** MySQL/MariaDB/PostgreSQL database lets them share ender chest storage. Players see the same contents regardless of which server they log in to, as long as they are only on one server at a time.
 
-## Switching backends
+## Switching Backends
 
-To move to a different backend, change `database.type` (and the connection fields) and restart the server. Note that EnhancedEchest does **not** automatically copy existing rows between backends; only the [vanilla migration](/docs/migration) import is automated.
+To move to a different backend, change `database.type` (and the connection fields) and restart the server. Existing data is not copied automatically between backends; only the [vanilla migration](/docs/migration) import is automated.

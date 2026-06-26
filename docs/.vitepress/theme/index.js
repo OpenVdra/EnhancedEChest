@@ -14,6 +14,7 @@ import DocCard from '../components/card/DocCard.vue'
 import FeatureCard from '../components/card/FeatureCard.vue'
 
 import Contributors from '../components/home/Contributors.vue'
+import LucideIcon from '../components/icon/LucideIcon.vue'
 
 export default {
     extends: DefaultTheme,
@@ -32,5 +33,6 @@ export default {
         app.component('FeatureCard', FeatureCard)
 
         app.component('Contributors', Contributors)
+        app.component('LucideIcon', LucideIcon)
     }
 }
