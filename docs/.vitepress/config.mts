@@ -2,7 +2,7 @@ import { defineConfig } from 'vitepress'
 
 export default defineConfig({
   title: "EnhancedEchest",
-  description: "Database-backed multi-chest ender chest plugin for Minecraft",
+  description: "Bigger ender chests for your players, several per person, each with its own name and icon.",
   // GitHub project page is served from /EnhancedEchest/. If you later point a custom
   // domain at the site (add public/CNAME), change this back to '/'.
   base: '/EnhancedEchest/',
@@ -94,6 +94,7 @@ export default defineConfig({
     vi: {
       label: 'Tiếng Việt',
       lang: 'vi',
+      description: 'Rương Ender lớn hơn cho người chơi, nhiều rương mỗi người, mỗi rương có tên và biểu tượng riêng.',
       themeConfig: {
         nav: [
           { text: 'Trang chủ', link: '/vi/' },
