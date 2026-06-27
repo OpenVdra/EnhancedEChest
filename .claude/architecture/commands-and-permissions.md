@@ -66,7 +66,8 @@ The root literal has **no permission requirement** of its own; each subcommand g
 | `add <player> <size> [count] [duration]` | `enhancedechest.admin.add` | Grant chest(s); `duration` makes them expire (`ChestAdminCommand.add`) |
 | `resize <player> <index> <size>` | `enhancedechest.admin.resize` | Resize, spilling cut-off items to a temp chest. **Rejected on a PERM chest** (`admin.cannot-modify-perm`) |
 | `delete <player> <count> [force]` | `enhancedechest.admin.delete` | Delete the `count` newest **NORMAL** chests; first chest always kept; `force` discards items. PERM chests are skipped |
-| **`view <player> [list \| index]`** | **`enhancedechest.admin.view`** | **Open another player's chest, sharing the live session** |
+| **`view <player> [list \| index]`** | **`enhancedechest.admin.view`** | **Open the admin per-chest menu (Open / Clear chest / Back), sharing the live session** |
+| **`transfer <from> <to> <#index \| name \| all> [override \| temp]`** | **`enhancedechest.admin.transfer`** | **Move a player's NORMAL chests onto another account (account switch)** |
 
 ### `/ee view` (`ChestAdminCommand.view` / `viewList`)
 
@@ -74,15 +75,46 @@ Opens a target player's chest for the admin by joining the **shared session** (`
 the admin sees — and edits — the *same* inventory the owner has open. No dupe is possible (see
 [concurrency-and-dupe-safety.md](concurrency-and-dupe-safety.md)).
 
+Every entry point funnels through the **admin detail dialog** (`ChestDialogs.adminDetailDialog` via
+`ChestOpener.openAdminDetail`) — Open / Clear chest \[Admin\] / Back — so the admin-only Clear button has a
+home and the flow mirrors the owner's list→detail:
+
 - **No argument** — the command lists the target's chests and routes: 0 → `admin.view-no-chests`,
-  1 → open it directly, 2+ → the **admin picker dialog** (`ChestDialogs.adminViewListDialog` via
-  `service.showAdminViewList`), whose buttons call `adminOpen` for the target's UUID (not the clicker's).
+  1 → the **detail dialog** for that chest, 2+ → the **admin picker dialog**
+  (`ChestDialogs.adminViewListDialog` via `service.showAdminViewList`), whose buttons open the detail
+  dialog for the target's UUID (not the clicker's).
 - **`list`** — always show the picker dialog, even for a single chest (`viewList`).
-- **`<index>`** — open that chest directly, verified to exist first (`admin.chest-not-found` otherwise).
+- **`<index>`** — open the detail dialog for that chest, verified to exist first (`admin.chest-not-found`
+  otherwise).
 - **Offline owners are supported** — the admin becomes the sole viewer; the chest persists on close.
 
-The picker dialog is **view-only metadata**: just open buttons (no edit-mode/rename/set-main, which are
-owner operations) — see [ui-dialogs.md](ui-dialogs.md).
+The picker and detail dialogs are **view-only metadata**: open + clear only (no edit-mode/rename/set-main,
+which are owner operations) — see [ui-dialogs.md](ui-dialogs.md). The **Clear chest** button is built only
+when the admin holds `enhancedechest.admin.clear`, carries a red `(Admin)` tag, and routes through a
+confirmation (`adminClearConfirmDialog`) before `ChestSpillService.clearChest` (force-close + `runExclusive`
++ `storage.clearChestContents` → sets `container_data = NULL`).
+
+### `/ee transfer` (`ChestTransferCommand` / `ChestTransferService`)
+
+Account-switch primitive: **moves** a player's **NORMAL** chests onto another account (TEMP overflow and
+PERM grants are excluded — PERM is re-granted by the destination's own permissions). The target token and
+the optional `override`/`temp` flag share one Brigadier greedy argument, parsed in `ChestTransferCommand`,
+so the target can be `all`, a `#index`/bare int, or a custom chest name (which may contain spaces).
+
+- **`all`** replaces the destination's NORMAL chests with copies of the source's, at the same indices, so
+  the destination ends up with **exactly** the source's chest count (nothing from the destination account
+  stacked on). **`#index`/name** moves just that one chest.
+- It is a **move**, not a copy: the source's NORMAL chests are deleted in the same transaction, so items are
+  never duplicated.
+- **Conflict flag** — if the destination already holds items in a chest the transfer would replace, the
+  command aborts (`admin.transfer-needs-flag`) unless `override` (discard them) or `temp` (spill them to a
+  recoverable temp chest) is given. "Has items" is detected by decoding the destination chest, not by a
+  non-null blob.
+- The whole row swap is one transaction (`EnderChestStorage.transferChests`): destination PERM/TEMP chests
+  sitting on a needed source index are relocated to a free high index rather than dropped; on a full
+  transfer the copied source primary becomes the only main. Both players' open chests are force-closed
+  first and the transaction runs through `ChestSessionManager.runExclusiveAcross` (a multi-key
+  `runExclusive`), so it is dupe-safe even if a chest was open. Best run while both players are offline.
 - **Read-only vs editable** is decided per-click in `EnderChestGuiListener`, not by this command:
   - `enhancedechest.admin.view` → may open and **look** (every item move is cancelled, `chest.view-only`).
   - `enhancedechest.admin.edit` → may **take/add** items.
@@ -102,8 +134,10 @@ enhancedechest.admin.migrate       /ee migrate vanilla and /ee migrate axvaults
 enhancedechest.admin.add
 enhancedechest.admin.resize
 enhancedechest.admin.delete
+enhancedechest.admin.transfer     move a player's NORMAL chests onto another account (/ee transfer)
 enhancedechest.admin.view         open another player's chest (read-only by default)
 enhancedechest.admin.edit         additionally take/add items while viewing
+enhancedechest.admin.clear        show/use the Clear chest button in the /ee view detail dialog
 ```
 
 All admin nodes default to `op`.

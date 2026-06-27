@@ -109,6 +109,19 @@ public final class ChestSpillService {
     }
 
     /**
+     * Empties a chest's contents (admin "clear chest" action), keeping the chest itself (size, name,
+     * icon, kind). Force-closes every viewer's GUI first so the live session can't re-save the old
+     * contents over the wipe, then clears exclusively per (owner, index) so the swap is dupe-safe.
+     */
+    public CompletableFuture<Void> clearChest(UUID owner, int index) {
+        return sessions.forceCloseAll(owner, index).thenCompose(v ->
+                sessions.runExclusive(owner, index, () -> {
+                    storage.clearChestContents(owner, index);
+                    return null;
+                }));
+    }
+
+    /**
      * Bulk-removes the {@code count} newest (highest-index) NORMAL chests a player owns, spilling (or
      * force-discarding) each, and completes with the number actually removed. The player's <i>first</i>
      * chest — the lowest-indexed NORMAL chest — is always protected, so a player can never be left with

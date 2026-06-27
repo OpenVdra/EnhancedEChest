@@ -66,6 +66,9 @@ public final class ChestSessionManager {
     /** Identifies an in-flight save by owner + chest index, so unrelated chests never block each other. */
     private record SaveKey(UUID owner, int index) {}
 
+    /** A public (owner, index) reference for multi-chest exclusive operations (see {@link #runExclusiveAcross}). */
+    public record ChestRef(UUID owner, int index) {}
+
     /** A queued open waiting for its session's first DB load to finish. */
     private record Pending(Player player, @Nullable Location sourceBlock) {}
 
@@ -390,6 +393,43 @@ public final class ChestSessionManager {
             return marker;
         });
         marker.whenComplete((v, e) -> pendingSaves.remove(key, marker));
+        return result;
+    }
+
+    /**
+     * Like {@link #runExclusive} but spanning <b>several</b> chests at once: chains {@code dbWork} behind
+     * the in-flight save/op of every {@code ref}, and registers a marker for each so a concurrent
+     * {@code open} of any of them waits for the work to finish. Used by the multi-chest, two-player
+     * {@code /ee transfer} so its whole DB transaction is one dupe-safe critical section.
+     *
+     * <p>Callers must {@link #forceCloseAll} every ref first (to flush live edits); this only serialises
+     * the DB work behind the resulting saves. The work runs on the async executor; the returned future
+     * completes with its result (or its failure).
+     */
+    public <T> CompletableFuture<T> runExclusiveAcross(List<ChestRef> refs, Supplier<T> dbWork) {
+        List<SaveKey> keys = refs.stream()
+                .map(r -> new SaveKey(r.owner(), r.index()))
+                .distinct()
+                .toList();
+        CompletableFuture<T> result = new CompletableFuture<>();
+        CompletableFuture<Void> marker = result.handle((v, e) -> null);
+        List<CompletableFuture<Void>> prev = new ArrayList<>();
+        // Atomically chain after whatever is currently pending for each key, installing the marker so
+        // later opens of any key see this op as the pending work and wait for it.
+        for (SaveKey key : keys) {
+            pendingSaves.compute(key, (k, current) -> {
+                prev.add(current != null ? current : CompletableFuture.completedFuture(null));
+                return marker;
+            });
+        }
+        CompletableFuture.allOf(prev.toArray(new CompletableFuture[0])).whenComplete((v, e) ->
+                db.supply(dbWork).whenComplete((r, err) -> {
+                    if (err != null) result.completeExceptionally(err);
+                    else result.complete(r);
+                }));
+        marker.whenComplete((v, e) -> {
+            for (SaveKey key : keys) pendingSaves.remove(key, marker);
+        });
         return result;
     }
 

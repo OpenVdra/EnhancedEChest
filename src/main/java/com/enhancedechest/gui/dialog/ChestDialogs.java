@@ -185,9 +185,12 @@ public final class ChestDialogs {
             if (chest.primary()) {
                 label = label.append(Component.text(" ")).append(lang.getGui("dialog.main-tag"));
             }
+            // Clicking a chest opens the admin per-chest detail dialog (Open / Clear chest / Back),
+            // rather than opening the inventory straight away — that detail dialog is where the
+            // admin-only Clear button lives.
             buttons.add(ActionButton.create(label, listTooltip(chest), BUTTON_WIDTH,
                     click((view, audience) -> {
-                        if (audience instanceof Player p) opener.adminOpen(p, target, index);
+                        if (audience instanceof Player p) opener.openAdminDetail(p, targetName, target, index);
                     })));
         }
 
@@ -200,6 +203,78 @@ public final class ChestDialogs {
                         .body(List.of(DialogBody.plainMessage(lang.getGui("dialog.admin-list-body"), BODY_WIDTH)))
                         .build())
                 .type(DialogType.multiAction(buttons, close, columnsFor(ordered.size()))));
+    }
+
+    /**
+     * Admin per-chest detail: Open, an admin-only Clear chest, and Back. Unlike the owner's
+     * {@link #detailDialog} there is no rename / set-main / icon (those are owner operations); an admin
+     * only opens the contents or wipes them.
+     *
+     * <p>The Clear button is built <b>only</b> when {@code canClear} is true (the admin holds
+     * {@code enhancedechest.admin.clear}), and its label carries a red {@code (Admin)} tag so it reads as
+     * a privileged action. It forwards to a confirmation dialog rather than wiping immediately.
+     *
+     * @param targetName display name of the chest's owner (for titles and Back navigation)
+     * @param target     UUID of the owner; passed to {@code adminOpen} / clear when a button is clicked
+     * @param canClear   whether to show the Clear chest button (gated on the clear permission)
+     */
+    public Dialog adminDetailDialog(String targetName, UUID target, ChestSummary chest, boolean canClear) {
+        int index = chest.index();
+        List<ActionButton> buttons = new ArrayList<>(3);
+
+        buttons.add(ActionButton.create(lang.getGui("dialog.open"), lang.getGui("dialog.open-desc"), BUTTON_WIDTH,
+                click((view, audience) -> {
+                    if (audience instanceof Player p) opener.adminOpen(p, target, index);
+                })));
+
+        if (canClear) {
+            buttons.add(ActionButton.create(lang.getGui("dialog.admin-clear"), lang.getGui("dialog.admin-clear-desc"),
+                    BUTTON_WIDTH, click((view, audience) -> {
+                        if (audience instanceof Player p) opener.openAdminClearConfirm(p, targetName, target, index);
+                    })));
+        }
+
+        buttons.add(ActionButton.create(lang.getGui("dialog.back"), null, BUTTON_WIDTH,
+                click((view, audience) -> {
+                    if (audience instanceof Player p) opener.openAdminViewList(p, targetName, target);
+                })));
+
+        Component title = withIcon(chest, lang.getChestLabel(index, chest.customName(), chest.kind()));
+        return Dialog.create(builder -> builder.empty()
+                .base(DialogBase.builder(title)
+                        .body(List.of(detailBody(chest)))
+                        .build())
+                .type(DialogType.multiAction(buttons, null, 1)));
+    }
+
+    /**
+     * Confirmation gate for the admin Clear chest action: a red warning body, a Confirm button (also
+     * tagged {@code (Admin)}) that performs the wipe, and Cancel that returns to the detail dialog. The
+     * wipe is permanent, so it is never done on a single click.
+     */
+    public Dialog adminClearConfirmDialog(String targetName, UUID target, ChestSummary chest) {
+        int index = chest.index();
+
+        ActionButton confirm = ActionButton.create(lang.getGui("dialog.admin-clear-confirm"), null, BUTTON_WIDTH,
+                click((view, audience) -> {
+                    if (audience instanceof Player p) opener.adminClear(p, targetName, target, index);
+                }));
+        ActionButton cancel = ActionButton.create(lang.getGui("dialog.cancel"), null, BUTTON_WIDTH,
+                click((view, audience) -> {
+                    if (audience instanceof Player p) opener.openAdminDetail(p, targetName, target, index);
+                }));
+
+        // A dedicated question title (not the chest label) so the dialog reads as a confirmation; the
+        // chest body names which chest (plain label, no icon sprite), and Cancel is the safe default.
+        Component title = lang.getGui("dialog.admin-clear-confirm-title");
+        return Dialog.create(builder -> builder.empty()
+                .base(DialogBase.builder(title)
+                        .body(List.of(
+                                DialogBody.plainMessage(
+                                        lang.getChestLabel(index, chest.customName(), chest.kind()), BODY_WIDTH),
+                                DialogBody.plainMessage(lang.getGui("dialog.admin-clear-confirm-body"), BODY_WIDTH)))
+                        .build())
+                .type(DialogType.multiAction(List.of(confirm, cancel), null, 1)));
     }
 
     /**

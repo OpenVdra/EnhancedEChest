@@ -27,6 +27,16 @@ dialog:
   admin-list-title: '<white>{player}''s Ender Chests'
   admin-list-body: '<white>Select a chest to view.'
 
+  # ===== Admin detail dialog (per chest, /ee view) =====
+  # The Clear button only appears for admins with enhancedechest.admin.clear. The red (Admin) tag marks
+  # it as a privileged action; it opens a confirmation before wiping anything.
+  admin-clear: '<red>(Admin) <white>Clear chest'
+  admin-clear-desc: '<white>Permanently empty every item from this chest.'
+  # Confirmation dialog: a dedicated title + warning body, then a clear yes/no pair (✔ confirm / ✖ cancel).
+  admin-clear-confirm-title: '<white>Clear this chest?'
+  admin-clear-confirm-body: '<gray>Every item in this chest will be <red>permanently deleted</red>.<newline><gray>This cannot be undone.'
+  admin-clear-confirm: '<green>✔ <white>Clear chest'
+
   # ===== Detail dialog (a single chest) =====
   # Centred text under the title. {size} = slot count.
   detail-body: '<white>{size} slots'

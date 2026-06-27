@@ -133,6 +133,33 @@ public interface EnderChestStorage {
      */
     void deleteChest(UUID owner, int index);
 
+    /** Empties a chest's contents (sets the stored bytes to NULL), keeping its size, name, icon and kind. */
+    void clearChestContents(UUID owner, int index);
+
+    /**
+     * Moves a player's NORMAL chests onto another player in a single transaction (the account-switch
+     * primitive behind {@code /ee transfer}). For each source NORMAL chest (all of them, or only
+     * {@code onlyIndex} when non-null) a copy is written to {@code to} at the <i>same</i> index,
+     * carrying its size, custom name, icon and contents (and, on a full transfer, the primary flag);
+     * the source row is then deleted, so the items live on exactly one account.
+     *
+     * <p>The destination's pre-existing NORMAL chests in scope are removed first so the destination
+     * ends up with exactly the source's chest count and nothing stacked on top. Any destination index
+     * listed in {@code preserveDestIndices} is re-inserted as a TEMP chest (carrying its items and
+     * expiring at {@code tempExpiresAt}) before removal, so those items remain recoverable; indices not
+     * listed are discarded. Destination PERM/TEMP chests sitting on an index the source needs are
+     * relocated to a free index rather than dropped. The whole thing is one transaction, so a failure
+     * leaves both players untouched.
+     *
+     * @param onlyIndex           a single source index to transfer, or null for every NORMAL chest
+     * @param preserveDestIndices destination indices whose items must be kept (spilled to a temp chest);
+     *                            empty to discard every replaced destination chest
+     * @param tempExpiresAt       epoch-millis expiry stamped on any temp chest created for preserved items
+     * @return the number of chests transferred
+     */
+    int transferChests(UUID from, UUID to, @Nullable Integer onlyIndex,
+                       java.util.Set<Integer> preserveDestIndices, long tempExpiresAt);
+
     /** Sets or clears a chest's custom display name (null resets to the default numbered title). */
     void renameChest(UUID owner, int index, @Nullable String name);
 

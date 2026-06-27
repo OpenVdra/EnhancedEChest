@@ -69,6 +69,7 @@ export default defineConfig({
             items: [
               { text: 'Welcome', link: '/docs/' },
               { text: 'Features', link: '/docs/features' },
+              { text: 'Paper vs Folia', link: '/docs/folia-paper' },
             ]
           },
           {
@@ -127,6 +128,7 @@ export default defineConfig({
             items: [
               { text: 'Giới thiệu', link: '/vi/docs/' },
               { text: 'Tính năng', link: '/vi/docs/features' },
+              { text: 'Paper và Folia', link: '/vi/docs/folia-paper' },
             ]
           },
           {

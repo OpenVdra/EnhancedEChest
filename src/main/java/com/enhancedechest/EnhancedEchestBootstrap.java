@@ -4,6 +4,7 @@ import com.enhancedechest.command.EnderChestOpenCommand;
 import com.enhancedechest.command.admin.ChestAdminCommand;
 import com.enhancedechest.command.admin.MigrateAxVaultsCommand;
 import com.enhancedechest.command.admin.MigratePlayerVaultsXCommand;
+import com.enhancedechest.command.admin.ChestTransferCommand;
 import com.enhancedechest.command.admin.MigrateVanillaCommand;
 import com.enhancedechest.command.admin.ReloadCommand;
 import com.mojang.brigadier.LiteralMessage;
@@ -40,6 +41,7 @@ public final class EnhancedEchestBootstrap implements PluginBootstrap {
     private static final String ADMIN_ADD_PERMISSION = "enhancedechest.admin.add";
     private static final String ADMIN_RESIZE_PERMISSION = "enhancedechest.admin.resize";
     private static final String ADMIN_DELETE_PERMISSION = "enhancedechest.admin.delete";
+    private static final String ADMIN_TRANSFER_PERMISSION = "enhancedechest.admin.transfer";
     // /ee view requires this; modifying (take/add) further requires enhancedechest.admin.edit,
     // checked per-click in EnderChestGuiListener so a view-only admin can look but not touch.
     private static final String ADMIN_VIEW_PERMISSION = "enhancedechest.admin.view";
@@ -263,6 +265,51 @@ public final class EnhancedEchestBootstrap implements PluginBootstrap {
                 });
     };
 
+    /**
+     * Suggests transfer targets for {@code /ee transfer <from> <to> <target>}: the literal {@code all},
+     * plus the <i>source</i> player's chests as {@code #index} and custom-name completions. The source is
+     * read from the already-typed {@code from} argument and resolved from cached data (online or the
+     * offline roster), so it also works for offline source players. {@code target} is a greedy string, so
+     * suggestions are filtered by the typed prefix.
+     */
+    private static final SuggestionProvider<CommandSourceStack> TRANSFER_TARGETS = (ctx, builder) -> {
+        String prefix = builder.getRemaining().toLowerCase(Locale.ROOT);
+        if ("all".startsWith(prefix)) {
+            builder.suggest("all", new LiteralMessage("Every chest (full account transfer)"));
+        }
+        String fromName;
+        try {
+            fromName = StringArgumentType.getString(ctx, "from");
+        } catch (IllegalArgumentException e) {
+            return builder.buildFuture();
+        }
+        EnhancedEchestPlugin plugin =
+                (EnhancedEchestPlugin) Bukkit.getPluginManager().getPlugin("EnhancedEchest");
+        if (plugin == null || !plugin.isEnabled()) {
+            return builder.buildFuture();
+        }
+        UUID source = knownPlayerUuid(fromName);
+        if (source == null) {
+            return builder.buildFuture();
+        }
+        return plugin.getStorageGateway().listChestsAsync(source)
+                .thenApply(chests -> {
+                    for (var chest : chests) {
+                        if (chest.kind() == com.enhancedechest.model.ChestKind.TEMP) continue;
+                        String name = chest.customName();
+                        boolean named = name != null && !name.isBlank();
+                        String idx = "#" + chest.index();
+                        if (idx.toLowerCase(Locale.ROOT).startsWith(prefix)) {
+                            builder.suggest(idx, new LiteralMessage(named ? name : "Ender chest " + chest.index()));
+                        }
+                        if (named && name.toLowerCase(Locale.ROOT).startsWith(prefix)) {
+                            builder.suggest(name, new LiteralMessage("Ender chest " + chest.index()));
+                        }
+                    }
+                    return builder.build();
+                });
+    };
+
     @Override
     public void bootstrap(@NotNull BootstrapContext context) {
         context.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
@@ -420,6 +467,23 @@ public final class EnhancedEchestBootstrap implements PluginBootstrap {
                                                                 ctx.getSource(),
                                                                 StringArgumentType.getString(ctx, "player"),
                                                                 IntegerArgumentType.getInteger(ctx, "count")))))))
+                        // /ee transfer <from> <to> <index|name|all> [override|temp] — move one player's
+                        // chests onto another account (account switch). The target and the optional
+                        // override/temp flag share one greedy argument so the target may be a #index, a
+                        // custom name (which can contain spaces), or 'all'; the flag is parsed off the end.
+                        .then(Commands.literal("transfer")
+                                .requires(src -> src.getSender().hasPermission(ADMIN_TRANSFER_PERMISSION))
+                                .then(Commands.argument("from", StringArgumentType.word())
+                                        .suggests(KNOWN_PLAYERS)
+                                        .then(Commands.argument("to", StringArgumentType.word())
+                                                .suggests(KNOWN_PLAYERS)
+                                                .then(Commands.argument("target", StringArgumentType.greedyString())
+                                                        .suggests(TRANSFER_TARGETS)
+                                                        .executes(ctx -> ChestTransferCommand.transfer(
+                                                                ctx.getSource(),
+                                                                StringArgumentType.getString(ctx, "from"),
+                                                                StringArgumentType.getString(ctx, "to"),
+                                                                StringArgumentType.getString(ctx, "target")))))))
                         .build(),
                 "EnhancedEchest admin commands",
                 List.of("ee")

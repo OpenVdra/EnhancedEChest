@@ -36,6 +36,9 @@ migrate:
 admin:
   reload-success: '{prefix}&fConfiguration reloaded.'
   player-not-found: '{prefix}&fPlayer {player} was not found.'
+  no-permission: '{prefix}&fYou do not have permission to do that.'
+  # Admin "Clear chest" action from /ee view. {player} = owner, {index} = chest number.
+  chest-cleared: '{prefix}&fEmptied ender chest {index} of {player}.'
   invalid-size: '{prefix}&fSize must be a multiple of 9 between 9 and 54.'
   invalid-duration: '{prefix}&fInvalid duration "{duration}". Use a value like 20s, 5m, 1h, 7d, or 1d_2h_30m.'
   chest-not-found: '{prefix}&f{player} has no ender chest with index {index}.'
@@ -54,6 +57,18 @@ admin:
   chest-deleted-newest-spilled: '{prefix}&fDeleted the newest ender chest of {player}. Any items it held were moved to a temporary chest.'
   chests-deleted-newest: '{prefix}&fDeleted the {count} newest ender chests of {player}. Their items were discarded.'
   chests-deleted-newest-spilled: '{prefix}&fDeleted the {count} newest ender chests of {player}. Any items they held were moved to temporary chests.'
+  # /ee transfer <from> <to> <index|name|all> [override|temp] — move chests to a switched account.
+  transfer-usage: '{prefix}&fUsage: /ee transfer <from> <to> <#index | name | all> [override | temp].'
+  transfer-same-player: '{prefix}&fThe source and destination players must be different.'
+  transfer-not-found: '{prefix}&f{player} has no ender chest matching "{target}".'
+  transfer-no-source: '{prefix}&f{player} has no ender chests to transfer.'
+  # Shown when the destination already has items in chests this transfer would replace and no flag was given.
+  transfer-needs-flag: '{prefix}&f{player} already has items in chests this would replace. Add "override" to discard them or "temp" to move them to temporary storage.'
+  transfer-failed: '{prefix}&fThe transfer failed. No chests were changed. Please check the console.'
+  transfer-complete-all: '{prefix}&fTransferred all {count} ender chest(s) from {from} to {to}.'
+  transfer-complete-one: '{prefix}&fTransferred {count} ender chest from {from} to {to}.'
+  transfer-displaced-temp: '{prefix}&f{player}''s previous items were moved to temporary storage.'
+  transfer-displaced-override: '{prefix}&f{player}''s previous items were discarded.'
 
 update:
   available: '{prefix}&fA new update is available. You are on {current}, and the latest is {latest}.'

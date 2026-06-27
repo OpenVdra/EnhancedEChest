@@ -79,6 +79,34 @@ public abstract class AbstractSqlStorage implements EnderChestStorage {
     private static final String SQL_DELETE =
             "DELETE FROM enderchests WHERE player_uuid = ? AND chest_index = ?";
 
+    // Empties a chest in place: NULL contents read back as an empty chest of the same size/name/icon/kind.
+    private static final String SQL_CLEAR_CONTENTS =
+            "UPDATE enderchests SET container_data = NULL, last_updated = ? " +
+            "WHERE player_uuid = ? AND chest_index = ?";
+
+    // Reads every column needed to copy a chest onto another player (used by the transfer transaction).
+    private static final String SQL_SELECT_NORMAL_ALL =
+            "SELECT chest_index, size, custom_name, is_primary, container_data, icon FROM enderchests " +
+            "WHERE player_uuid = ? AND kind = 0 ORDER BY chest_index";
+
+    private static final String SQL_SELECT_NORMAL_ONE =
+            "SELECT chest_index, size, custom_name, is_primary, container_data, icon FROM enderchests " +
+            "WHERE player_uuid = ? AND kind = 0 AND chest_index = ?";
+
+    // Snapshot of every row of the destination so the transfer can find its max index, scope and collisions.
+    private static final String SQL_SELECT_ROWS =
+            "SELECT chest_index, size, kind, container_data FROM enderchests WHERE player_uuid = ?";
+
+    // Full insert including custom_name, container_data and icon (NORMAL, never-expiring).
+    private static final String SQL_INSERT_FULL =
+            "INSERT INTO enderchests " +
+            "(player_uuid, chest_index, size, custom_name, is_primary, container_data, migrated, last_updated, kind, expires_at, icon) " +
+            "VALUES (?, ?, ?, ?, ?, ?, 0, ?, 0, NULL, ?)";
+
+    // Relocates a row to a free index (moves a destination PERM/TEMP chest off an index the source needs).
+    private static final String SQL_REINDEX =
+            "UPDATE enderchests SET chest_index = ? WHERE player_uuid = ? AND chest_index = ?";
+
     private static final String SQL_RENAME =
             "UPDATE enderchests SET custom_name = ? WHERE player_uuid = ? AND chest_index = ?";
 
@@ -403,6 +431,184 @@ public abstract class AbstractSqlStorage implements EnderChestStorage {
             throw new RuntimeException("Failed to query expired chests", e);
         }
     }
+
+    @Override
+    public void clearChestContents(UUID owner, int index) {
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement ps = conn.prepareStatement(SQL_CLEAR_CONTENTS)) {
+            ps.setLong(1, System.currentTimeMillis());
+            ps.setString(2, owner.toString());
+            ps.setInt(3, index);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to clear contents of chest " + index + " for " + owner, e);
+        }
+    }
+
+    @Override
+    public int transferChests(UUID from, UUID to, @Nullable Integer onlyIndex,
+                              java.util.Set<Integer> preserveDestIndices, long tempExpiresAt) {
+        try (Connection conn = dataSource.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                List<SourceRow> src = readSourceNormal(conn, from, onlyIndex);
+                if (src.isEmpty()) {
+                    conn.commit();
+                    return 0;
+                }
+                List<DestRow> dest = readRows(conn, to);
+
+                int destMax = dest.stream().mapToInt(d -> d.index).max().orElse(0);
+                int srcMax  = src.stream().mapToInt(r -> r.index).max().orElse(0);
+                // Temp/relocated rows go above everything so they can never collide with an incoming
+                // source index (which are all <= srcMax) or an existing destination index.
+                int freeIndex = Math.max(destMax, srcMax) + 1;
+
+                java.util.Set<Integer> srcIndices = new java.util.HashSet<>();
+                for (SourceRow r : src) srcIndices.add(r.index);
+
+                // Destination NORMAL chests this transfer replaces: the one at onlyIndex, or all of them.
+                List<DestRow> destScope = new ArrayList<>();
+                for (DestRow d : dest) {
+                    if (d.kind != 0) continue;
+                    if (onlyIndex == null || d.index == onlyIndex) destScope.add(d);
+                }
+
+                // 1. Preserve flagged destination items as temp chests before they are removed.
+                for (DestRow d : destScope) {
+                    if (preserveDestIndices.contains(d.index) && d.data != null) {
+                        insertTempChest(conn, to, freeIndex++, d.size, d.data, tempExpiresAt);
+                    }
+                }
+
+                // 2. Remove the destination NORMAL chests in scope.
+                java.util.Set<Integer> removed = new java.util.HashSet<>();
+                for (DestRow d : destScope) {
+                    deleteRow(conn, to, d.index);
+                    removed.add(d.index);
+                }
+
+                // 3. On a full transfer the copied source primary becomes the only main; clear any old flag.
+                if (onlyIndex == null) {
+                    try (PreparedStatement ps = conn.prepareStatement(SQL_CLEAR_PRIMARY)) {
+                        ps.setString(1, to.toString());
+                        ps.executeUpdate();
+                    }
+                }
+
+                // 4. Relocate any surviving destination row (PERM/TEMP, or an out-of-scope NORMAL on a
+                //    single-index transfer) that still sits on an index the source is about to occupy.
+                for (DestRow d : dest) {
+                    if (removed.contains(d.index)) continue;
+                    if (srcIndices.contains(d.index)) {
+                        reindexRow(conn, to, d.index, freeIndex++);
+                    }
+                }
+
+                // 5. Write the source chests onto the destination at their original indices.
+                for (SourceRow r : src) {
+                    boolean primary = onlyIndex == null && r.primary;
+                    insertFullChest(conn, to, r.index, r.size, r.name, primary, r.data, r.icon);
+                }
+
+                // 6. Remove the source chests (this is a move, not a copy — no duplicate items).
+                for (SourceRow r : src) {
+                    deleteRow(conn, from, r.index);
+                }
+
+                conn.commit();
+                return src.size();
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to transfer chests from " + from + " to " + to, e);
+        }
+    }
+
+    private List<SourceRow> readSourceNormal(Connection conn, UUID from, @Nullable Integer onlyIndex)
+            throws SQLException {
+        String sql = onlyIndex == null ? SQL_SELECT_NORMAL_ALL : SQL_SELECT_NORMAL_ONE;
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, from.toString());
+            if (onlyIndex != null) ps.setInt(2, onlyIndex);
+            try (ResultSet rs = ps.executeQuery()) {
+                List<SourceRow> rows = new ArrayList<>();
+                while (rs.next()) {
+                    rows.add(new SourceRow(
+                            rs.getInt("chest_index"),
+                            rs.getInt("size"),
+                            rs.getString("custom_name"),
+                            rs.getInt("is_primary") != 0,
+                            rs.getBytes("container_data"),
+                            rs.getString("icon")));
+                }
+                return rows;
+            }
+        }
+    }
+
+    private List<DestRow> readRows(Connection conn, UUID to) throws SQLException {
+        try (PreparedStatement ps = conn.prepareStatement(SQL_SELECT_ROWS)) {
+            ps.setString(1, to.toString());
+            try (ResultSet rs = ps.executeQuery()) {
+                List<DestRow> rows = new ArrayList<>();
+                while (rs.next()) {
+                    rows.add(new DestRow(
+                            rs.getInt("chest_index"),
+                            rs.getInt("size"),
+                            rs.getInt("kind"),
+                            rs.getBytes("container_data")));
+                }
+                return rows;
+            }
+        }
+    }
+
+    private void deleteRow(Connection conn, UUID owner, int index) throws SQLException {
+        try (PreparedStatement ps = conn.prepareStatement(SQL_DELETE)) {
+            ps.setString(1, owner.toString());
+            ps.setInt(2, index);
+            ps.executeUpdate();
+        }
+    }
+
+    private void reindexRow(Connection conn, UUID owner, int oldIndex, int newIndex) throws SQLException {
+        try (PreparedStatement ps = conn.prepareStatement(SQL_REINDEX)) {
+            ps.setInt(1, newIndex);
+            ps.setString(2, owner.toString());
+            ps.setInt(3, oldIndex);
+            ps.executeUpdate();
+        }
+    }
+
+    private void insertFullChest(Connection conn, UUID owner, int index, int size, @Nullable String name,
+                                 boolean primary, @Nullable byte[] data, @Nullable String icon)
+            throws SQLException {
+        try (PreparedStatement ps = conn.prepareStatement(SQL_INSERT_FULL)) {
+            ps.setString(1, owner.toString());
+            ps.setInt(2, index);
+            ps.setInt(3, size);
+            if (name == null) ps.setNull(4, Types.VARCHAR); else ps.setString(4, name);
+            ps.setInt(5, primary ? 1 : 0);
+            // setBytes(null) binds SQL NULL cleanly across all three dialects (avoids the bytea/blob
+            // type guess setNull would need for the container column).
+            ps.setBytes(6, data);
+            ps.setLong(7, System.currentTimeMillis());
+            if (icon == null) ps.setNull(8, Types.VARCHAR); else ps.setString(8, icon);
+            ps.executeUpdate();
+        }
+    }
+
+    /** A source NORMAL chest read in full so it can be copied onto another player. */
+    private record SourceRow(int index, int size, @Nullable String name, boolean primary,
+                             @Nullable byte[] data, @Nullable String icon) {}
+
+    /** A destination row (any kind), enough to scope, detect collisions and preserve items. */
+    private record DestRow(int index, int size, int kind, @Nullable byte[] data) {}
 
     @Override
     public void renameChest(UUID owner, int index, @Nullable String name) {

@@ -26,6 +26,10 @@ Each `/ee` command requires only its own node. There is no separate base permiss
 
 **`enhancedechest.admin.edit`** - combined with `admin.view`, allows moving items.
 
+**`enhancedechest.admin.clear`** - shows the red **(Admin) Clear chest** button in the `/ee view` menu and allows emptying a chest with it.
+
+**`enhancedechest.admin.transfer`** - `/ee transfer`: move a player's chests onto another account.
+
 **`enhancedechest.admin.reload`** - `/ee reload`: reload config and language files.
 
 **`enhancedechest.admin.migrate`** - `/ee migrate vanilla`, `/ee migrate axvaults`, and `/ee migrate playervaultsx`: import data from vanilla ender chests, the AxVaults plugin, or the PlayerVaultsX plugin.

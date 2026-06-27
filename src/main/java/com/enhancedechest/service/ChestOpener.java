@@ -38,6 +38,9 @@ public final class ChestOpener {
     /** Permission to open the ender chest by command; also gates the dialog's "set as main" action. */
     private static final String OPEN_GUI_PERMISSION = "enhancedechest.command.open";
 
+    /** Permission an admin needs to see and use the "Clear chest" button in the admin detail dialog. */
+    private static final String ADMIN_CLEAR_PERMISSION = "enhancedechest.admin.clear";
+
     private final ChestSessionManager sessions;
     private final StorageGateway storageGateway;
     private final PlayerSettingsCache settings;
@@ -48,6 +51,7 @@ public final class ChestOpener {
     private final Logger logger;
     private final ChestDialogs dialogs;
     private final PermissionChestService permService;
+    private final ChestSpillService spillService;
 
     // Runtime-tunable via /ee reload (see setDefaultSize). volatile so the value written on the main
     // thread during a reload is visible to the async open threads that read it when bootstrapping.
@@ -57,7 +61,7 @@ public final class ChestOpener {
     public ChestOpener(ChestSessionManager sessions, StorageGateway storageGateway,
                        PlayerSettingsCache settings, EnderChestStorage storage, DbExecutor db,
                        LanguageManager lang, FoliaLib foliaLib, Logger logger, int defaultSize,
-                       PermissionChestService permService) {
+                       PermissionChestService permService, ChestSpillService spillService) {
         this.sessions       = sessions;
         this.storageGateway = storageGateway;
         this.settings       = settings;
@@ -68,6 +72,7 @@ public final class ChestOpener {
         this.logger         = logger;
         this.defaultSize    = defaultSize;
         this.permService    = permService;
+        this.spillService   = spillService;
         this.dialogs        = new ChestDialogs(this, storageGateway, settings, lang);
     }
 
@@ -291,6 +296,73 @@ public final class ChestOpener {
         foliaLib.getScheduler().runAtEntity(admin, t -> {
             if (admin.isOnline()) admin.showDialog(dialogs.adminViewListDialog(targetName, target, chests));
         });
+    }
+
+    /** Reloads the target's chests and shows the admin view-list dialog (used for Back from a detail dialog). */
+    public void openAdminViewList(Player admin, String targetName, UUID target) {
+        storageGateway.listChestsAsync(target).thenAccept(chests ->
+                foliaLib.getScheduler().runAtEntity(admin, task -> {
+                    if (!admin.isOnline()) return;
+                    if (chests.isEmpty()) {
+                        admin.sendMessage(lang.get("admin.view-no-chests", "player", targetName));
+                        return;
+                    }
+                    admin.showDialog(dialogs.adminViewListDialog(targetName, target, chests));
+                })).exceptionally(e -> reportOpenFailure(admin, e));
+    }
+
+    /**
+     * Shows the admin per-chest detail dialog (Open / Clear chest [Admin] / Back) for the target's chest.
+     * The "Clear chest" button is only built when the admin holds {@code enhancedechest.admin.clear}, so a
+     * view-only admin never sees it. Reachable from {@code /ee view} and the admin view-list dialog.
+     */
+    public void openAdminDetail(Player admin, String targetName, UUID target, int index) {
+        boolean canClear = admin.hasPermission(ADMIN_CLEAR_PERMISSION);
+        storageGateway.listChestsAsync(target).thenAccept(chests ->
+                foliaLib.getScheduler().runAtEntity(admin, task -> {
+                    if (!admin.isOnline()) return;
+                    chests.stream().filter(c -> c.index() == index).findFirst().ifPresentOrElse(
+                            c -> admin.showDialog(dialogs.adminDetailDialog(targetName, target, c, canClear)),
+                            () -> admin.sendMessage(lang.get("chest.not-found")));
+                })).exceptionally(e -> reportOpenFailure(admin, e));
+    }
+
+    /** Shows the "are you sure?" confirmation before an admin clears a chest (guards the destructive wipe). */
+    public void openAdminClearConfirm(Player admin, String targetName, UUID target, int index) {
+        if (!admin.hasPermission(ADMIN_CLEAR_PERMISSION)) {
+            foliaLib.getScheduler().runAtEntity(admin, t -> {
+                if (admin.isOnline()) admin.sendMessage(lang.get("admin.no-permission"));
+            });
+            return;
+        }
+        storageGateway.listChestsAsync(target).thenAccept(chests ->
+                foliaLib.getScheduler().runAtEntity(admin, task -> {
+                    if (!admin.isOnline()) return;
+                    chests.stream().filter(c -> c.index() == index).findFirst().ifPresentOrElse(
+                            c -> admin.showDialog(dialogs.adminClearConfirmDialog(targetName, target, c)),
+                            () -> admin.sendMessage(lang.get("chest.not-found")));
+                })).exceptionally(e -> reportOpenFailure(admin, e));
+    }
+
+    /**
+     * Empties the target's chest (admin "Clear chest" action), re-checking the permission, then returns
+     * the admin to the detail dialog with a confirmation message. Dupe-safe: the clear force-closes every
+     * viewer and runs exclusively (see {@link ChestSpillService#clearChest}).
+     */
+    public void adminClear(Player admin, String targetName, UUID target, int index) {
+        if (!admin.hasPermission(ADMIN_CLEAR_PERMISSION)) {
+            foliaLib.getScheduler().runAtEntity(admin, t -> {
+                if (admin.isOnline()) admin.sendMessage(lang.get("admin.no-permission"));
+            });
+            return;
+        }
+        spillService.clearChest(target, index).thenRun(() ->
+                foliaLib.getScheduler().runAtEntity(admin, t -> {
+                    if (!admin.isOnline()) return;
+                    admin.sendMessage(lang.get("admin.chest-cleared",
+                            "player", targetName, "index", Integer.toString(index)));
+                    openAdminDetail(admin, targetName, target, index);
+                })).exceptionally(e -> reportOpenFailure(admin, e));
     }
 
     /** Shows the per-chest detail dialog (Open / Rename / Set-main / Back). */

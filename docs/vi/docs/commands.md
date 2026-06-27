@@ -48,7 +48,13 @@ Xóa `<count>` rương mới nhất của người chơi. Vật phẩm được 
 
 <CommandRow commands="/ee view &lt;player&gt; [list | index]" permission="enhancedechest.admin.view">
 
-Mở rương của người chơi khác (hoạt động kể cả khi họ ngoại tuyến). Chỉ với `enhancedechest.admin.view` thì kho đồ là chỉ-đọc; thêm `enhancedechest.admin.edit` để di chuyển vật phẩm.
+Mở menu từng rương của người chơi khác (hoạt động kể cả khi họ ngoại tuyến). Từ menu bạn mở rương, và quản trị viên có `enhancedechest.admin.clear` còn thấy nút đỏ **(Admin) Dọn rương** để làm trống rương. Chỉ với `enhancedechest.admin.view` thì kho đồ là chỉ-đọc; thêm `enhancedechest.admin.edit` để di chuyển vật phẩm.
+
+</CommandRow>
+
+<CommandRow commands="/ee transfer &lt;from&gt; &lt;to&gt; &lt;#index | name | all&gt; [override | temp]" permission="enhancedechest.admin.transfer">
+
+Chuyển rương của một người chơi sang tài khoản khác, dùng khi ai đó đổi tài khoản. Dùng `all` để chuyển mọi rương (tài khoản đích sẽ có đúng các rương của nguồn), hoặc `#index` / tên rương để chỉ chuyển một rương. Nếu tài khoản đích đã có vật phẩm trong rương sẽ bị thay thế, thêm `override` để bỏ chúng đi hoặc `temp` để chuyển sang kho tạm khôi phục được. Rương của nguồn sẽ bị xóa nên vật phẩm không bao giờ bị nhân đôi.
 
 </CommandRow>
 

@@ -18,7 +18,7 @@ commands:
   enhancedechest:
     description: EnhancedEchest admin commands
     aliases: [ ee ]
-    usage: /enhancedechest <migrate vanilla|axvaults> | reload | add | resize | delete | view
+    usage: /enhancedechest <migrate vanilla|axvaults> | reload | add | resize | delete | view | transfer
 
 permissions:
   enhancedechest.command.open:
@@ -39,4 +39,16 @@ permissions:
     default: op
   enhancedechest.admin.delete:
     description: Use /ee delete
+    default: op
+  enhancedechest.admin.transfer:
+    description: Use /ee transfer (move a player's chests onto another account)
+    default: op
+  enhancedechest.admin.view:
+    description: Open another player's chest (read-only by default)
+    default: op
+  enhancedechest.admin.edit:
+    description: Take/add items while viewing another player's chest
+    default: op
+  enhancedechest.admin.clear:
+    description: Empty a chest from the admin view (Clear chest button)
     default: op

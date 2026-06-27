@@ -27,6 +27,16 @@ dialog:
   admin-list-title: '<white>Các Rương Ender Của {player}'
   admin-list-body: '<white>Chọn một rương để xem.'
 
+  # ===== Hộp thoại chi tiết của quản trị viên (mỗi rương, /ee view) =====
+  # Nút Dọn chỉ hiện với quản trị viên có quyền enhancedechest.admin.clear. Thẻ (Admin) đỏ đánh dấu đây là
+  # hành động đặc quyền; nút này mở hộp xác nhận trước khi xóa.
+  admin-clear: '<red>(Admin) <white>Dọn rương'
+  admin-clear-desc: '<white>Xóa vĩnh viễn mọi vật phẩm trong rương này.'
+  # Hộp xác nhận: tiêu đề riêng + nội dung cảnh báo, rồi cặp đồng ý/hủy rõ ràng (✔ xác nhận / ✖ hủy).
+  admin-clear-confirm-title: '<white>Dọn rương này?'
+  admin-clear-confirm-body: '<gray>Mọi vật phẩm trong rương sẽ bị <red>xóa vĩnh viễn</red>.<newline><gray>Không thể hoàn tác.'
+  admin-clear-confirm: '<green>✔ <white>Dọn rương'
+
   # ===== Hộp thoại chi tiết (một rương duy nhất) =====
   # Văn bản căn giữa dưới tiêu đề. {size} = số ô.
   detail-body: '<white>{size} ô'

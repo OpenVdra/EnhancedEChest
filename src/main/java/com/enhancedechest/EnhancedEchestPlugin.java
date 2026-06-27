@@ -18,6 +18,7 @@ import com.enhancedechest.serialization.ContainerCodec;
 import com.enhancedechest.service.ChestOpener;
 import com.enhancedechest.service.ChestSessionManager;
 import com.enhancedechest.service.ChestSpillService;
+import com.enhancedechest.service.ChestTransferService;
 import com.enhancedechest.service.DbExecutor;
 import com.enhancedechest.service.PermissionChestService;
 import com.enhancedechest.service.PlayerSettingsCache;
@@ -48,6 +49,7 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
     private PlayerSettingsCache settingsCache;
     private ChestSessionManager sessionManager;
     private ChestSpillService spillService;
+    private ChestTransferService chestTransferService;
     private PermissionChestService permissionChestService;
     private ChestOpener chestOpener;
     private ExpirySweeper expirySweeper;
@@ -89,11 +91,13 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
                 getSLF4JLogger(), foliaLib, dbExecutor);
         spillService   = new ChestSpillService(sessionManager, storage, codec, storageGateway,
                 pluginConfig.getTempExpiryMillis());
+        chestTransferService = new ChestTransferService(sessionManager, storage, codec, storageGateway,
+                languageManager, foliaLib, dbExecutor, getSLF4JLogger(), pluginConfig.getTempExpiryMillis());
         permissionChestService = new PermissionChestService(storageGateway, spillService,
                 pluginConfig.isPermissionChestsEnabled(), pluginConfig.getDefaultSize());
         chestOpener    = new ChestOpener(sessionManager, storageGateway, settingsCache, storage,
                 dbExecutor, languageManager, foliaLib, getSLF4JLogger(), pluginConfig.getDefaultSize(),
-                permissionChestService);
+                permissionChestService, spillService);
 
         migrationService  = new MigrationService(storage, codec, getSLF4JLogger());
         axVaultsMigrationService = new AxVaultsMigrationService(storage, codec, getSLF4JLogger(),
@@ -178,6 +182,7 @@ public final class EnhancedEchestPlugin extends JavaPlugin {
         // even while async saves are in flight.
         chestOpener.setDefaultSize(pluginConfig.getDefaultSize());
         spillService.setTempExpiry(pluginConfig.getTempExpiryMillis());
+        chestTransferService.setTempExpiry(pluginConfig.getTempExpiryMillis());
         permissionChestService.setConfig(pluginConfig.isPermissionChestsEnabled(), pluginConfig.getDefaultSize());
         expirySweeper.reschedule(pluginConfig.getExpiryCheckIntervalMillis());
         backupService.reschedule(pluginConfig.isBackupEnabled(), pluginConfig.getBackupIntervalMillis(),

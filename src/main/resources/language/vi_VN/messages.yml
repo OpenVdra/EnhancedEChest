@@ -36,6 +36,9 @@ migrate:
 admin:
   reload-success: '{prefix}&fĐã tải lại cấu hình.'
   player-not-found: '{prefix}&fKhông tìm thấy người chơi {player}.'
+  no-permission: '{prefix}&fBạn không có quyền làm điều đó.'
+  # Hành động "Dọn rương" của quản trị viên từ /ee view. {player} = chủ rương, {index} = số thứ tự.
+  chest-cleared: '{prefix}&fĐã dọn sạch rương ender {index} của {player}.'
   invalid-size: '{prefix}&fKích thước phải là bội số của 9 trong khoảng 9 đến 54.'
   invalid-duration: '{prefix}&fThời lượng "{duration}" không hợp lệ. Hãy dùng dạng như 20s, 5m, 1h, 7d, hoặc 1d_2h_30m.'
   chest-not-found: '{prefix}&f{player} không có rương ender nào với số thứ tự {index}.'
@@ -54,6 +57,18 @@ admin:
   chest-deleted-newest-spilled: '{prefix}&fĐã xóa rương ender mới nhất của {player}. Vật phẩm trong rương đã được chuyển sang một rương tạm.'
   chests-deleted-newest: '{prefix}&fĐã xóa {count} rương ender mới nhất của {player}. Vật phẩm trong chúng đã bị bỏ đi.'
   chests-deleted-newest-spilled: '{prefix}&fĐã xóa {count} rương ender mới nhất của {player}. Vật phẩm trong chúng đã được chuyển sang các rương tạm.'
+  # /ee transfer <from> <to> <index|name|all> [override|temp] — chuyển rương sang tài khoản mới.
+  transfer-usage: '{prefix}&fCách dùng: /ee transfer <from> <to> <#index | name | all> [override | temp].'
+  transfer-same-player: '{prefix}&fNgười chơi nguồn và đích phải khác nhau.'
+  transfer-not-found: '{prefix}&f{player} không có rương ender nào khớp với "{target}".'
+  transfer-no-source: '{prefix}&f{player} không có rương ender nào để chuyển.'
+  # Hiện khi tài khoản đích đã có vật phẩm trong các rương sẽ bị thay thế mà chưa chọn cờ.
+  transfer-needs-flag: '{prefix}&f{player} đã có vật phẩm trong các rương sẽ bị thay thế. Thêm "override" để bỏ chúng đi hoặc "temp" để chuyển sang kho tạm.'
+  transfer-failed: '{prefix}&fChuyển thất bại. Không có rương nào bị thay đổi. Vui lòng kiểm tra console.'
+  transfer-complete-all: '{prefix}&fĐã chuyển toàn bộ {count} rương ender từ {from} sang {to}.'
+  transfer-complete-one: '{prefix}&fĐã chuyển {count} rương ender từ {from} sang {to}.'
+  transfer-displaced-temp: '{prefix}&fVật phẩm cũ của {player} đã được chuyển sang kho tạm.'
+  transfer-displaced-override: '{prefix}&fVật phẩm cũ của {player} đã bị bỏ đi.'
 
 update:
   available: '{prefix}&fĐã có bản cập nhật mới. Bạn đang dùng {current}, bản mới nhất là {latest}.'

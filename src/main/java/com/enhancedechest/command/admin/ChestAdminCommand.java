@@ -237,7 +237,7 @@ public final class ChestAdminCommand {
                             "player", playerName, "index", Integer.toString(idx)));
                     return;
                 }
-                ctx.chestOpener.adminOpen(admin, ctx.target, idx);
+                ctx.chestOpener.openAdminDetail(admin, playerName, ctx.target, idx);
             });
             return 1;
         }
@@ -247,9 +247,10 @@ public final class ChestAdminCommand {
                 ctx.sender.sendMessage(ctx.lang.get("admin.view-no-chests", "player", playerName));
                 return;
             }
-            // A lone chest opens straight away unless 'list' was given; 2+ always show the picker.
+            // A lone chest goes straight to its detail dialog unless 'list' was given; 2+ always show the
+            // picker. The detail dialog (Open / Clear chest [Admin] / Back) is the hub for admin actions.
             if (!forceList && chests.size() == 1) {
-                ctx.chestOpener.adminOpen(admin, ctx.target, chests.get(0).index());
+                ctx.chestOpener.openAdminDetail(admin, playerName, ctx.target, chests.get(0).index());
             } else {
                 ctx.chestOpener.showAdminViewList(admin, playerName, ctx.target, chests);
             }
