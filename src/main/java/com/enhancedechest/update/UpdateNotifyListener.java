@@ -32,7 +32,7 @@ public final class UpdateNotifyListener implements Listener {
                     "current", checker.getCurrentVersion(),
                     "latest",  checker.getLatestVersion()));
             player.sendMessage(lang.get("update.download",
-                    "url", UpdateChecker.MODRINTH_PAGE));
+                    "url", checker.getDownloadUrl()));
         }, 2L, TimeUnit.SECONDS);
     }
 }
