@@ -1,14 +1,22 @@
 name: Release
 
-# Runs when a GitHub Release is published (drafts do not trigger this, you must click
-# "Publish release"). workflow_dispatch lets you run it by hand from the Actions tab.
+# Two ways to release:
+#   1. Publish a GitHub Release (drafts do NOT trigger this — you must click "Publish").
+#   2. Run it by hand from the Actions tab ("Run workflow"). In that case the workflow
+#      auto-creates the tag + GitHub Release from the Gradle version if one doesn't exist
+#      yet, so you don't have to create a tag first.
 on:
   release:
     types: [ published ]
   workflow_dispatch:
+    inputs:
+      changelog:
+        description: "Release notes / changelog. Leave empty to auto-generate from commits."
+        required: false
+        type: string
 
 permissions:
-  contents: write   # needed to attach the built jar to the release
+  contents: write   # needed to create the tag/release and attach the built jar
 
 env:
   # Game versions these uploads target. Must match the version lists that exist on
@@ -47,15 +55,71 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "jar=$JAR" >> "$GITHUB_OUTPUT"
 
+      # Make sure a GitHub Release (and its tag) exists for this version. On a
+      # `release: published` event it already does — we just take its tag. On a manual
+      # `workflow_dispatch` run we create the tag + Release from the Gradle version if it
+      # isn't there yet, so "Run workflow" is enough to cut a release. The tag is the bare
+      # version (e.g. 1.0.2), no "v" prefix. Creating a release with GITHUB_TOKEN does not
+      # re-trigger this workflow, so there is no double publish.
+      - name: Ensure GitHub release exists
+        id: release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          VERSION: ${{ steps.meta.outputs.version }}
+          INPUT_CHANGELOG: ${{ github.event.inputs.changelog }}
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            TAG="${{ github.event.release.tag_name }}"
+          else
+            TAG="$VERSION"
+            if ! gh release view "$TAG" --repo "$REPO" >/dev/null 2>&1; then
+              if [ -n "$INPUT_CHANGELOG" ]; then
+                gh release create "$TAG" --repo "$REPO" --target "${{ github.ref_name }}" \
+                  --title "EnhancedEchest $VERSION" --notes "$INPUT_CHANGELOG"
+              else
+                gh release create "$TAG" --repo "$REPO" --target "${{ github.ref_name }}" \
+                  --title "EnhancedEchest $VERSION" --generate-notes
+              fi
+            fi
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      # Resolve the changelog once from the GitHub Release (single source of truth) and
+      # reuse it for Modrinth, Hangar and Discord. This is why the version showed up but
+      # the changelog was blank before — version comes from Gradle, the changelog lives on
+      # the release.
+      - name: Resolve changelog
+        id: changelog
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          BODY=$(gh release view "$TAG" --repo "$REPO" --json body --jq '.body' 2>/dev/null || true)
+          if [ -z "$BODY" ]; then
+            BODY="See the GitHub release for details."
+          fi
+          {
+            echo "body<<__CHANGELOG_EOF__"
+            echo "$BODY"
+            echo "__CHANGELOG_EOF__"
+          } >> "$GITHUB_OUTPUT"
+          URL=$(gh release view "$TAG" --repo "$REPO" --json url --jq '.url' 2>/dev/null || true)
+          if [ -z "$URL" ]; then
+            URL="https://github.com/$REPO/releases"
+          fi
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+
       # Each publish step below runs independently: a failure in one does not skip the
       # others (if: !cancelled), but all of them require the build and metadata to succeed.
 
       - name: Attach jar to the GitHub release
-        if: ${{ !cancelled() && steps.meta.outcome == 'success' && github.event_name == 'release' }}
+        if: ${{ !cancelled() && steps.meta.outcome == 'success' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release upload "${{ github.event.release.tag_name }}" \
+          gh release upload "${{ steps.release.outputs.tag }}" \
             "${{ steps.meta.outputs.jar }}" --clobber --repo "${{ github.repository }}"
 
       - name: Publish to Modrinth
@@ -67,7 +131,7 @@ jobs:
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
           VERSION: ${{ steps.meta.outputs.version }}
           JAR: ${{ steps.meta.outputs.jar }}
-          CHANGELOG: ${{ github.event.release.body }}
+          CHANGELOG: ${{ steps.changelog.outputs.body }}
         run: |
           GAME_VERSIONS_JSON=$(printf '%s' "$GAME_VERSIONS" | jq -R 'split(",")')
           DATA=$(jq -n \
@@ -102,6 +166,7 @@ jobs:
           slug: ${{ env.HANGAR_SLUG }}
           version: ${{ steps.meta.outputs.version }}
           channel: Release
+          description: ${{ steps.changelog.outputs.body }}
           files: |
             [
               { "path": "${{ steps.meta.outputs.jar }}", "platforms": ["PAPER"] }
@@ -115,6 +180,6 @@ jobs:
         with:
           webhook-url: ${{ secrets.DISCORD_WEBHOOK }}
           embed-title: "EnhancedEchest ${{ steps.meta.outputs.version }} released"
-          embed-description: ${{ github.event.release.body }}
-          embed-url: ${{ github.event.release.html_url }}
+          embed-description: ${{ steps.changelog.outputs.body }}
+          embed-url: ${{ steps.changelog.outputs.url }}
           embed-color: "5763719"
