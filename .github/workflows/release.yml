@@ -1,0 +1,87 @@
+name: Release
+
+# Runs when a GitHub Release is published (drafts do not trigger this, you must click
+# "Publish release"). workflow_dispatch lets you run it by hand from the Actions tab.
+on:
+  release:
+    types: [ published ]
+  workflow_dispatch:
+
+permissions:
+  contents: write   # needed to attach the built jar to the release
+
+env:
+  # Minecraft version(s) these uploads target on Modrinth and Hangar. Matches the
+  # minecraftVersion / api-version in the build. Adjust if you publish for more versions,
+  # e.g. "1.21.4" or a comma/space separated list.
+  GAME_VERSIONS: "26.1.2"
+  MODRINTH_ID: "xgEWccga"
+  # Your project slug on hangar.papermc.io. Verify it matches the project you created.
+  HANGAR_SLUG: "EnhancedEchest"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build shadow jar
+        run: |
+          chmod +x gradlew
+          ./gradlew shadowJar --no-daemon
+
+      - name: Resolve version and jar path
+        id: meta
+        run: |
+          VERSION=$(./gradlew properties -q --no-daemon | grep "^version:" | awk '{print $2}')
+          JAR=$(ls build/libs/EnhancedEchest-*.jar | head -n1)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "jar=$JAR" >> "$GITHUB_OUTPUT"
+
+      - name: Publish to Modrinth and attach to the GitHub release
+        uses: Kir-Antipov/mc-publish@v3.3
+        with:
+          modrinth-id: ${{ env.MODRINTH_ID }}
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          files: build/libs/EnhancedEchest-*.jar
+          name: EnhancedEchest ${{ steps.meta.outputs.version }}
+          version: ${{ steps.meta.outputs.version }}
+          version-type: release
+          loaders: paper
+          game-versions: ${{ env.GAME_VERSIONS }}
+          changelog: ${{ github.event.release.body }}
+
+      - name: Publish to Hangar
+        uses: milkdrinkers/Hangar-Publish@v2
+        with:
+          api_token: ${{ secrets.HANGAR_API_TOKEN }}
+          slug: ${{ env.HANGAR_SLUG }}
+          version: ${{ steps.meta.outputs.version }}
+          channel: Release
+          files: |
+            [
+              { "path": "${{ steps.meta.outputs.jar }}", "platforms": ["PAPER"] }
+            ]
+          platform_dependencies: |
+            { "PAPER": ["${{ env.GAME_VERSIONS }}"] }
+
+      - name: Announce on Discord
+        if: success()
+        uses: tsickert/discord-webhook@v6.0.0
+        with:
+          webhook-url: ${{ secrets.DISCORD_WEBHOOK }}
+          embed-title: "EnhancedEchest ${{ steps.meta.outputs.version }} released"
+          embed-description: ${{ github.event.release.body }}
+          embed-url: ${{ github.event.release.html_url }}
+          embed-color: "5763719"
