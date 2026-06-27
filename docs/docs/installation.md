@@ -6,16 +6,16 @@ Before installing EnhancedEchest, make sure your server meets these requirements
 
 | Requirement | Specification |
 |-------------|---------------|
-| **Minecraft Version** | 26.1.x only |
+| **Minecraft Version** | 1.21.11 - 26.2 |
 | **Server Software** | [Paper](https://papermc.io/downloads/paper), [Folia](https://papermc.io/downloads/folia), [Purpur](https://purpurmc.org/) or compatible Paper forks |
-| **Java Version** | Java 25 |
+| **Java Version** | Java 21 |
 
-::: warning Paper 26.1.x is required
-EnhancedEchest requires Paper or a Paper-compatible fork (Folia, Purpur). It will **not** run on CraftBukkit, nor on other Minecraft versions.
+::: warning Paper 1.21.11 - 26.2 is required
+EnhancedEchest requires Paper or a Paper-compatible fork (Folia, Purpur). It will **not** run on CraftBukkit, nor on Minecraft versions older than 1.21.11.
 :::
 
-::: warning Java 25 is required
-The plugin is compiled for Java 25. Make sure your server runs on Java 25 or newer, otherwise it will fail to load.
+::: warning Java 21 is required
+The plugin is compiled for Java 21. Make sure your server runs on Java 21 or newer, otherwise it will fail to load.
 :::
 
 ## Download

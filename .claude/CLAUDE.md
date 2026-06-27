@@ -20,8 +20,9 @@ For the full design, read [ARCHITECTURE.md](ARCHITECTURE.md). For user-facing do
 
 ## Stack & constraints
 
-- **Java 25**, **Paper API 26.1.2** (`paper-api:26.1.2.build.72-stable`; api-version `26.1.2`),
-  Gradle Kotlin DSL, ShadowJar.
+- **Java 21**, **Paper API 1.21.11** (`paper-api:1.21.11-R0.1-SNAPSHOT`; api-version `1.21`),
+  Gradle Kotlin DSL, ShadowJar. Compiled against the lowest supported API (1.21.11) so the jar
+  runs on **servers 1.21.11 through 26.2** — don't call APIs newer than 1.21.11.
 - Paper-only APIs are used (`paper-plugin.yml` bootstrapper, Brigadier commands, Dialog API) —
   the plugin requires **Paper** (or a Paper-compatible fork such as Purpur / Folia) and does not run
   on CraftBukkit.

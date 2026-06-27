@@ -13,7 +13,7 @@ permissions:
 env:
   # Game versions these uploads target. Must match the version lists that exist on
   # Modrinth and Hangar. Keep this set in sync with the platforms when you add a new one.
-  GAME_VERSIONS: "26.1,26.1.1,26.1.2,26.2"
+  GAME_VERSIONS: "1.21.11,26.1,26.1.1,26.1.2,26.2"
   MODRINTH_ID: "xgEWccga"
   # Your project slug on hangar.papermc.io. Verify it matches the project you created.
   HANGAR_SLUG: "EnhancedEchest"
@@ -25,10 +25,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up JDK 25
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
-          java-version: '25'
+          java-version: '21'
           distribution: 'temurin'
 
       - name: Setup Gradle
@@ -107,7 +107,7 @@ jobs:
               { "path": "${{ steps.meta.outputs.jar }}", "platforms": ["PAPER"] }
             ]
           platform_dependencies: |
-            { "PAPER": ["26.1", "26.1.1", "26.1.2", "26.2"] }
+            { "PAPER": ["1.21.11", "26.1", "26.1.1", "26.1.2", "26.2"] }
 
       - name: Announce on Discord
         if: ${{ !cancelled() && steps.meta.outcome == 'success' }}

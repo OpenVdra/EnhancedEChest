@@ -13,7 +13,7 @@ group = "com.enhancedechest"
 version = "1.0.2"
 
 java {
-    toolchain.languageVersion.set(JavaLanguageVersion.of(25))
+    toolchain.languageVersion.set(JavaLanguageVersion.of(21))
 }
 
 repositories {
@@ -28,7 +28,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:26.1.2.build.72-stable")
+    compileOnly("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
 
     // Shaded and relocated — no server-side drivers required
     shade("com.zaxxer:HikariCP:7.1.0")
@@ -101,5 +101,5 @@ tasks.runServer {
 //        modrinth("luckperms", "v5.5.53-bukkit")
 //        modrinth("axvaults", "2.15.0")
 //    }
-    minecraftVersion("26.1.2")
+    minecraftVersion("1.21.11")
 }

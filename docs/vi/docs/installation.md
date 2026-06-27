@@ -4,16 +4,16 @@
 
 | Yêu cầu | Thông số |
 |---------|----------|
-| **Phiên bản Minecraft** | Chỉ 26.1.x |
+| **Phiên bản Minecraft** | 1.21.11 - 26.2 |
 | **Phần mềm máy chủ** | [Paper](https://papermc.io/downloads/paper), [Folia](https://papermc.io/downloads/folia), [Purpur](https://purpurmc.org/) hoặc các bản fork tương thích Paper |
-| **Phiên bản Java** | Java 25 |
+| **Phiên bản Java** | Java 21 |
 
-::: warning Cần Paper 26.1.x
-EnhancedEchest yêu cầu Paper hoặc bản fork tương thích (Folia, Purpur). Nó sẽ **không** chạy trên CraftBukkit hay các phiên bản Minecraft khác.
+::: warning Cần Paper 1.21.11 - 26.2
+EnhancedEchest yêu cầu Paper hoặc bản fork tương thích (Folia, Purpur). Nó sẽ **không** chạy trên CraftBukkit hay các phiên bản Minecraft cũ hơn 1.21.11.
 :::
 
-::: warning Cần Java 25
-Plugin được biên dịch cho Java 25. Hãy đảm bảo máy chủ chạy Java 25 hoặc mới hơn, nếu không nó sẽ không tải được.
+::: warning Cần Java 21
+Plugin được biên dịch cho Java 21. Hãy đảm bảo máy chủ chạy Java 21 hoặc mới hơn, nếu không nó sẽ không tải được.
 :::
 
 ## Tải Về

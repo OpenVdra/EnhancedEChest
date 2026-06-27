@@ -16,8 +16,8 @@ A Paper plugin that replaces the vanilla ender chest with a larger, multi-chest,
 
 ## Requirements
 
-- Paper 26.1.x (or a compatible fork such as Purpur / Folia)
-- Java 25
+- Paper 1.21.11 - 26.2 (or a compatible fork such as Purpur / Folia)
+- Java 21
 
 ## Installation
 

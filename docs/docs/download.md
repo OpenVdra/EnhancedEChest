@@ -25,9 +25,9 @@ The Modrinth page is being prepared and may not be public yet. Until it goes liv
 
 | Requirement | Specification |
 |-------------|---------------|
-| **Minecraft Version** | 26.1.x only |
+| **Minecraft Version** | 1.21.11 - 26.2 |
 | **Server Software** | [Paper](https://papermc.io/downloads/paper), [Folia](https://papermc.io/downloads/folia), [Purpur](https://purpurmc.org/) or compatible Paper forks |
-| **Java Version** | Java 25 |
+| **Java Version** | Java 21 |
 
 ## Installation
 

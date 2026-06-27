@@ -57,7 +57,7 @@
 
 ## Requirements
 
-**Minecraft** 26.1.x · **Server** Paper / Folia / Purpur (or compatible forks) · **Java** 25+
+**Minecraft** 1.21.11 - 26.2 · **Server** Paper / Folia / Purpur (or compatible forks) · **Java** 21+
 
 **Installation:** stop your server, drop the `.jar` into `plugins/`, and start. It runs on **SQLite out of the box**, no extra setup needed.
 
